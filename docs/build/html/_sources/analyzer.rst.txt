@@ -1,0 +1,15 @@
+code
+=========
+
+parsing the input files
+------------------------
+    infile = "dataset/all_Myc_Mad_2nd_myc_log_bound2.txt"
+    negctrlfile = "dataset/all_Myc_Mad_2nd_myc_log_negctrl.txt"
+    logsetting= True
+    stringent = True
+    pvalthres = .05
+
+    m1,m2,m3,wt = read_tbl(infile)
+    m1_med,m2_med,m3_med,wt_med = get_median_orientation(m1,m2,m3,wt)
+    m1_med_o1,m2_med_o1,m3_med_o1,wt_med_o1 = get_median_orientation(m1,m2,m3,wt,1)
+    m1_med_o2,m2_med_o2,m3_med_o2,wt_med_o2 = get_median_orientation(m1,m2,m3,wt,2)

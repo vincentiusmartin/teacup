@@ -1,0 +1,290 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Pipeline &#8212; teacup  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="code" href="code.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <style> .red {color:red;} </style><div class="section" id="pipeline">
+<h1>Pipeline<a class="headerlink" href="#pipeline" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="getting-data-to-train">
+<h2>Getting data to train<a class="headerlink" href="#getting-data-to-train" title="Permalink to this headline">¶</a></h2>
+<p>This framework does cooperativity modeling on the gcPBM data.</p>
+<p>Example of a gcPBM data from Myc:</p>
+<img alt="all_Myc_Mad_2nd_myc_log_bound2.txt" src="_images/mycbound.png" />
+<p>Where each data has its corresponding negative control:</p>
+<img alt="all_Myc_Mad_2nd_myc_log_negctrl.txt" src="_images/negctrl.png" />
+<p>First, import our framework which is located in the src folder:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;src&#39;</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">teacup</span> <span class="k">import</span> <span class="n">probeparser</span>
+<span class="kn">from</span> <span class="nn">teacup</span> <span class="k">import</span> <span class="n">classifier</span>
+<span class="kn">from</span> <span class="nn">teacup</span> <span class="k">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">teacup</span> <span class="k">import</span> <span class="n">sitesfinder</span>
+</pre></div>
+</div>
+<p>To start the analysis, we make an object from our data and its negative control:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">infile</span> <span class="o">=</span> <span class="s2">&quot;data/dataset/all_Myc_Mad_2nd_myc_log_bound2.txt&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">negctrlfile</span> <span class="o">=</span> <span class="s2">&quot;data/dataset/all_Myc_Mad_2nd_myc_log_negctrl.txt&quot;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">probes</span> <span class="o">=</span> <span class="n">probeparser</span><span class="o">.</span><span class="n">ProbeParser</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span><span class="n">negctrlfile</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To classify the probes on each orientation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pvalthres</span> <span class="o">=</span> <span class="o">.</span><span class="mi">05</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">classification</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">classify_per_orientation</span><span class="p">(</span><span class="n">probes</span><span class="p">,</span><span class="n">pvalthres</span><span class="p">)</span>
+<span class="go">Wilcox greater test orientation 1, # cooperative rows with p-val less than 0.050: 527/2059</span>
+<span class="go">Wilcox less test orientation 1, # steric rows with p-val less than 0.050: 41/2059</span>
+<span class="go">Wilcox greater test orientation 2, # cooperative rows with p-val less than 0.050: 548/2059</span>
+<span class="go">Wilcox less test orientation 2, # steric rows with p-val less than 0.050: 36/2059</span>
+<span class="go">Number of overlap coop: 151</span>
+<span class="go">Number of overlap steric: 0</span>
+<span class="go">Number of overlap additive: 255</span>
+</pre></div>
+</div>
+<p>This returns a dictionary of label to the list of index. The function labels by
+running Mann–Whitney U test on the permutation of the orientation. It outputs
+the counts of the hypothesis testing as well as the number of overlapping label
+between orientation 1 and orientation 2.</p>
+<p>We can also get the count by running:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">utils</span><span class="o">.</span><span class="n">print_dictlist_count</span><span class="p">(</span><span class="n">classification</span><span class="p">)</span>
+<span class="go">Count of coop_o1: 527</span>
+<span class="go">Count of steric_o1: 41</span>
+<span class="go">Count of additive_o1: 698</span>
+<span class="go">Count of coop_o2: 548</span>
+<span class="go">Count of steric_o2: 36</span>
+<span class="go">Count of additive_o2: 642</span>
+<span class="go">Count of coop_overlap: 151</span>
+<span class="go">Count of steric_overlap: 0</span>
+<span class="go">Count of additive_overlap: 255</span>
+</pre></div>
+</div>
+<p>Save classification to file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">utils</span><span class="o">.</span><span class="n">dictlist2file</span><span class="p">(</span><span class="n">classification</span><span class="p">,</span><span class="s2">&quot;classification_per_orientation.txt&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>And read it again:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">classification</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">read_dictlist_file</span><span class="p">(</span><span class="s2">&quot;classification_per_orientation.txt&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To make plots from the classification variable:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ax</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">plot_median_binding_sum</span><span class="p">(</span><span class="n">probes</span><span class="p">,</span><span class="n">classification</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">plotname</span><span class="o">=</span><span class="s2">&quot;plot_overlap&quot;</span><span class="p">)</span>
+<span class="n">ax_o1</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">plot_median_binding_sum</span><span class="p">(</span><span class="n">probes</span><span class="p">,</span><span class="n">classification</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">plotname</span><span class="o">=</span><span class="s2">&quot;plot_o1&quot;</span><span class="p">)</span>
+<span class="n">ax_o2</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">plot_median_binding_sum</span><span class="p">(</span><span class="n">probes</span><span class="p">,</span><span class="n">classification</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">plotname</span><span class="o">=</span><span class="s2">&quot;plot_o2&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For example, for the orientation 1, the plot result is:</p>
+<img alt="_images/plot_o1-scatter.png" src="_images/plot_o1-scatter.png" />
+<p>And orientation 2:</p>
+<img alt="_images/plot_o2-scatter.png" src="_images/plot_o2-scatter.png" />
+<p>The next question is: among all orientations, how do we determine whether a
+probe is cooperative, additive, or steric? This needs to take into account the
+classification of a probe in both orientations. For example, if a probe is
+cooperative in both orientations the we can just label it as cooperative.
+However, if the label is different between orientations then we need to decide.
+The algorithm can be seen in <cite>classifier.classify_orientation_combined</cite>.</p>
+<p>To run the function and get the count:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">classification_combined</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">classify_orientation_combined</span><span class="p">(</span><span class="n">probes</span><span class="p">,</span><span class="n">pvalthres</span><span class="p">)</span>
+<span class="go">Pass cutoff in both 861</span>
+<span class="go">WARN: O2 is cooperative but o1 is steric for probe 32</span>
+<span class="go">WARN: O2 is cooperative but o1 is steric for probe 55</span>
+<span class="go">WARN: O1 is cooperative but o2 is steric for probe 77</span>
+<span class="go">.</span>
+<span class="go">.</span>
+<span class="go">Cooperative but steric count: 22</span>
+<span class="go">Rows that don&#39;t satisfy constraint 428</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">utils</span><span class="o">.</span><span class="n">print_dictlist_count</span><span class="p">(</span><span class="n">classification_combined</span><span class="p">)</span>
+<span class="go">Count of cooperative: 902</span>
+<span class="go">Count of additive: 652</span>
+<span class="go">Count of steric: 55</span>
+<span class="go">Count of coop_steric: 22</span>
+</pre></div>
+</div>
+<p>The count of coop_steric tells us that there are probes that are cooperative in
+one orientation and steric in the other. However, this should not happen. To see
+what happens, we can check a few probes that are cooperative and steric by first
+getting the index. One way to easily see this is by printing the indexes to a
+file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">utils</span><span class="o">.</span><span class="n">dictlist2file</span><span class="p">(</span><span class="n">classification_combined</span><span class="p">,</span><span class="s2">&quot;classification_both_orientations.txt&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>From the file, one of the row that is coop_steric is row 1115. We can see how
+the distribution from all replicas looks like by runnning:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">probes</span><span class="o">.</span><span class="n">scatter_boxplot_row</span><span class="p">(</span><span class="mi">1115</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The output is:</p>
+<img alt="_images/row210-box.png" src="_images/row210-box.png" />
+<p>It seems that steric happens in the orientation 1 and cooperative in the
+orientation 2. To get what happens with more detail, we can query the
+specificity of both binding sites using iMADS web server:</p>
+<img alt="_images/row210-iMADS.png" src="_images/row210-iMADS.png" />
+<p>From the image above, we can see that the first binding site is stronger than
+the second. That’s why m2_o1 is really strong1. But what is
+happened with m2_o2? This is most likely because the effect of the glass slide.
+Below is a depiction of this:</p>
+<a class="reference internal image-reference" href="_images/orientations.png"><img alt="_images/orientations.png" class="align-center" src="_images/orientations.png" style="width: 400px;" /></a>
+<p>The glass slide on the microarray really reduces the binding to the point that
+the first binding site becomes really weak. When both of the binding sites are
+weaker however, is when cooperative binding happens. The full mechanism on how
+to take this effect into the model is still unclear.</p>
+<p>Therefore, we decide to use probes that are clearly cooperative (cooperative in
+both orientations) and clearly additive (additive in both orientations). We do
+not have probes that are steric in both sites thus, we start by modeling
+cooperative vs additive.</p>
+<p>It is also important to note that with this, we leave the classification we made
+in <cite>classifier.classify_orientation_combined(probes,pvalthres)</cite> for the time
+being.</p>
+</div>
+<div class="section" id="visualizing-and-filtering-the-training-data">
+<h2>Visualizing and filtering the training data<a class="headerlink" href="#visualizing-and-filtering-the-training-data" title="Permalink to this headline">¶</a></h2>
+<p>To make the training data, first we need to be able to figure the binding sites
+from any wild type row in the probe files. To do this, we will use SitesFinder
+class which utilizes pwm and escore to find the binding site.</p>
+<p>To initialize SitesFinder:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pwmpath</span> <span class="o">=</span> <span class="s2">&quot;data/pwm/MYC-MAX_8mers_pwm.txt&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">escorepath</span> <span class="o">=</span> <span class="s2">&quot;data/escore/MYC-MAX_8mers_11111111.txt&quot;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sf</span> <span class="o">=</span> <span class="n">sitesfinder</span><span class="o">.</span><span class="n">SitesFinder</span><span class="p">(</span><span class="n">pwmpath</span><span class="p">,</span><span class="n">escorepath</span><span class="p">,</span><span class="n">pwm_startidx</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span><span class="n">pwm_endidx</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Using this class, we can see the binding sites and the place where mutations
+were made. For example, to get binding sites of all the clearly cooperative
+probes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">classification</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">read_dictlist_file</span><span class="p">(</span><span class="s2">&quot;classification_per_orientation.txt&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sfplot</span> <span class="o">=</span> <span class="n">sf</span><span class="o">.</span><span class="n">lineplot_pwm_escore</span><span class="p">(</span><span class="n">probes</span><span class="p">,</span><span class="n">indexes</span><span class="o">=</span><span class="n">classification</span><span class="p">[</span><span class="s2">&quot;coop_overlap&quot;</span><span class="p">],</span><span class="n">start_pwm_offset</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">end_pwm_offset</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">bottom_cutoff</span><span class="o">=-</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To make filter and make the training data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="go">&gt;&gt;&gt;sf.filtertrain_to_csv(probes,classification,filename=&quot;training.csv&quot;)</span>
+<span class="go">Number filtered cooperative 113</span>
+<span class="go">Number filtered additive 199</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="making-features-from-training-data">
+<h2>Making features from training data<a class="headerlink" href="#making-features-from-training-data" title="Permalink to this headline">¶</a></h2>
+<p>Initialize:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">trainingpath</span> <span class="o">=</span> <span class="s2">&quot;data/generated/training.csv&quot;</span>
+<span class="n">train</span> <span class="o">=</span> <span class="n">trainingparser</span><span class="o">.</span><span class="n">TrainingParser</span><span class="p">(</span><span class="n">trainingpath</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Boxplot from distance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">train</span><span class="o">.</span><span class="n">scatter_boxplot_col</span><span class="p">(</span><span class="s2">&quot;distance&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">image</span><span class="p">::</span> <span class="n">images</span><span class="o">/</span><span class="n">distance_scatterbox</span><span class="o">.</span><span class="n">png</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">teacup</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="code.html">code</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Pipeline</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#getting-data-to-train">Getting data to train</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#visualizing-and-filtering-the-training-data">Visualizing and filtering the training data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#making-features-from-training-data">Making features from training data</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="code.html" title="previous chapter">code</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Vincentius Martin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/pipeline.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
