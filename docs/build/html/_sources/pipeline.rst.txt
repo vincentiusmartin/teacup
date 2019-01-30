@@ -202,6 +202,6 @@ Boxplot from distance::
 
     train.scatter_boxplot_col("distance")
 
-Output::
+Output:
 
 .. image:: images/distance_scatterbox.png

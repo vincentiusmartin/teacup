@@ -18,4 +18,5 @@ if __name__=="__main__":
 
 
     train = trainingparser.TrainingParser(trainingpath)
-    train.scatter_boxplot_col("distance")
+    #train.scatter_boxplot_col("distance")
+    train.train_from_distance()
