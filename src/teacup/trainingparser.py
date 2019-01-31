@@ -69,7 +69,7 @@ class TrainingParser:
                             feature.append(0)
         return feature
 
-    def get_features(self,type="distance"):
+    def get_features(self,type="distance-numeric"):
         """
         type:
             distance-numeric
@@ -112,6 +112,9 @@ class TrainingParser:
 
             # https://stackoverflow.com/questions/25009284/how-to-plot-roc-curve-in-python
             print("Accuracy %s: %f" % (key,metrics.accuracy_score(y_train, y_pred)))
+
+            #for i in range(len(y_train)):
+            #    print(y_train[i],y_pred[i])
 
             # ROC curve
             fpr, tpr, _ = metrics.roc_curve(y_train, y_pred)
