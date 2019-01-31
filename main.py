@@ -16,7 +16,6 @@ if __name__=="__main__":
     logsetting= True
     pvalthres = .05
 
-
     train = trainingparser.TrainingParser(trainingpath)
-    #train.scatter_boxplot_col("distance")
-    train.train_from_distance()
+    train.scatter_boxplot_col("distance")
+    train.train_from_distance(categorical=True)

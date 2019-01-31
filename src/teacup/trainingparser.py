@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import numpy as np
+import itertools
 
 from sklearn import tree
 from sklearn import metrics
@@ -46,8 +47,57 @@ class TrainingParser:
 
     # ======== Training and testing modelss ========
 
-    def train_from_distance(self,model="numeric"):
-        x_train = self.training["distance"].values.reshape((-1,1))
+    def extract_kmer_features(self,seq,bpos1,bpos2):
+        span = 5
+        bpos = [bpos1 - 1, bpos2 - 1] # adjustment -1 for programming
+        nucleotides = ['A','C','G','T']
+        features = []
+
+        start = bpos1 - span
+        end = bpos2 + span + 1
+
+        feature = []
+        xx=0
+        for k in range(1,4):
+            perm = ["".join(p) for p in itertools.product(nucleotides, repeat=k)]
+            for pos in bpos:
+                for i in range(pos-span,pos+span+1):
+                    for kmer in perm:
+                        #print(seq[i:i+k],kmer)
+                        if seq[i:i+k] == kmer:
+                            feature.append(1)
+                        else:
+                            feature.append(0)
+        return feature
+
+    def get_features(self,type="distance"):
+        """
+        type:
+            distance-numeric
+            distance-categorical
+            sequence
+        """
+        if type == "distance-numeric":
+            return self.training["distance"].values.reshape((-1,1))
+        elif type == "distance-categorical":
+            one_hot = pd.get_dummies(self.training['distance'])
+            return  one_hot.values.tolist()
+        elif type == "sequence":
+            features = []
+            for idx,row in self.training.iterrows():
+                rowfeature = self.extract_kmer_features(row["sequence"],row["bpos1"],row["bpos2"])
+                features.append(rowfeature + [row["distance"]])
+            return features
+
+    def test_model(self,featuretype):
+        """
+        model:
+            numeric: distance as it is
+            categorical: use one hot encoder
+        """
+
+        x_train = self.get_features(featuretype)
+
         y_train = self.get_numeric_label().values
 
         clfs = {
