@@ -9,6 +9,7 @@ from sklearn import metrics
 from sklearn import ensemble
 from sklearn import svm
 from sklearn import linear_model
+from sklearn import naive_bayes
 
 class TrainingParser:
 
@@ -103,7 +104,9 @@ class TrainingParser:
                 "decision tree":tree.DecisionTreeClassifier(),
                 "random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0),
                 "SVM":svm.SVC(kernel="rbf",gamma=1.0/5),
-                "log regression":linear_model.LogisticRegression()
+                "log regression":linear_model.LogisticRegression(),
+                "gradient boosting":ensemble.GradientBoostingClassifier(),
+                "naive bayes":naive_bayes.GaussianNB()
                }
 
         for key in clfs:
