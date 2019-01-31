@@ -45,8 +45,19 @@ class TrainingParser:
 
     # ======== Training and testing modelss ========
 
-    def train_from_distance(self,model="numeric"):
-        x_train = self.training["distance"].values.reshape((-1,1))
+    def train_from_distance(self,categorical=False):
+        """
+        model:
+            numeric: distance as it is
+            categorical: use one hot encoder
+        """
+
+        if categorical:
+            one_hot = pd.get_dummies(self.training['distance'])
+            x_train = one_hot.values.tolist()
+        else:
+            x_train = self.training["distance"].values.reshape((-1,1))
+
         y_train = self.get_numeric_label().values
 
         clfs = {
@@ -70,3 +81,5 @@ class TrainingParser:
 
         plt.legend(loc=4)
         plt.show()
+
+    #def training_with_seqfeatures():

@@ -4,6 +4,17 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.backends.backend_pdf import PdfPages
 
+class BindingSite:
+
+    def __init__(self,bpos1,bpos2,distance):
+        if bpos1 < bpos2:
+            self.bpos1 = bpos1
+            self.bpos2 = bpos2
+        else:
+            self.bpos1 = bpos2
+            self.bpos2 = bpos1
+        self.distance = distance
+
 class SitesFinder:
 
     def __init__(self, pwmpath, escorepath,
@@ -162,6 +173,7 @@ class SitesFinder:
                         endpwm = i+PWMRANGE
                         maxpwm = max(pwmsites[startpwm:endpwm],key=lambda x:x['score'])
 
+                        # startpos: the start of binding
                         bind = {"startpos":escoresites[startidx]['position'],  "escorelength":signifcount, "escorelistidx":escoresites[startidx]['listindex'],
                         "position":maxpwm["position"],"pwmscore":maxpwm["score"]}
                         bindingsites.append(bind)
@@ -188,14 +200,14 @@ class SitesFinder:
         if not flag:
             return False,"Error: Position between binding sites don't have site with escore < 0.35: %d\n" % escoresites[i]["score"],distance
 
-        return True,str(bindsites)+"\n",distance
+        bsite = BindingSite(bindsites[0]["position"],bindsites[1]["position"],distance)
+        return True,str(bindsites)+"\n",bsite
 
-    def filter_sequences(self,probes,indexes=[],tofile=False,label="sequence",returntype="linear"):
+    def filter_sequences(self,probes,indexes=[],tofile=False,label="sequence"):
         """
         returntype: linear or table
         """
-        filtered_idxs = []
-        distances = []
+        table = []
         log = ""
 
         # when getting binding site, always use "wt"
@@ -209,43 +221,38 @@ class SitesFinder:
             pwmsites = self.get_binding_logpwm(seq)
             escoresites = self.get_binding_escore(seq)
             bsites = self.binding_sites(pwmsites,escoresites)
-            validated,msg,distance = self.validate_bindsites(bsites,escoresites)
+            validated,msg,bsite = self.validate_bindsites(bsites,escoresites)
             log += msg
             if validated:
-                filtered_idxs.append(key)
-                distances.append(distance)
+                seq = probes.get_seq("wt",[key])[key]
+                table.append({"index":key,
+                              "sequence":seq,
+                              "bpos1":bsite.bpos1,
+                              "bpos2":bsite.bpos2,
+                              "distance":bsite.distance,
+                              "label":label})
 
         if tofile:
+            '''
             with open("%s-idxs.txt"%label,'w') as f:
                 f.write(">%s_filtered\n"%label)
                 f.write(",".join(str(idx) for idx in filtered_idxs))
                 f.write("\n")
                 f.write(">%s_distance\n"%label)
                 f.write(",".join(str(idx) for idx in distances))
+            '''
             with open("%s-log.txt"%label,'w') as f:
                 f.write(log)
 
-        if returntype == "table":
-            return [{"index":filtered_idxs[i],"distance":distances[i]} for i in range(0,len(filtered_idxs))]
-        else:
-            return {"indexes":filtered_idxs,"distances":distances}
+        return pd.DataFrame(table)
 
     # TODO: make this more general
     def filtertrain_to_csv(self,probes,categories,filename="training.csv"):
-        coop_dist = self.filter_sequences(probes,indexes=categories["coop_overlap"])
-        additive_dist = self.filter_sequences(probes,indexes=categories["additive_overlap"])
+        coop_tbl = self.filter_sequences(probes,indexes=categories["coop_overlap"],label="cooperative")
+        additive_tbl = self.filter_sequences(probes,indexes=categories["additive_overlap"],label="additive")
 
-        coop_seq = probes.get_seq("wt",coop_dist["indexes"])
-        additive_seq = probes.get_seq("wt",additive_dist["indexes"])
+        print("Number filtered cooperative %d"%len(coop_tbl))
+        print("Number filtered additive %d"%len(additive_tbl))
 
-        coop_seq_list = [coop_seq[key] for key in coop_seq]
-        additive_seq_list = [additive_seq[key] for key in additive_seq]
-
-        coop_tbl = [{"sequence":coop_seq_list[i],"distance":coop_dist["distances"][i],"label":"cooperative"} for i in range(0,len(coop_seq))]
-        additive_tbl = [{"sequence":additive_seq_list[i],"distance":additive_dist["distances"][i],"label":"additive"} for i in range(0,len(additive_seq))]
-        combined = coop_tbl + additive_tbl
-
-        print("Number filtered cooperative %d"%len(coop_dist["indexes"]))
-        print("Number filtered additive %d"%len(additive_dist["indexes"]))
-
-        pd.DataFrame(combined,columns=["sequence","distance","label"]).to_csv(filename,index=False)
+        combined = pd.concat([coop_tbl,additive_tbl])
+        combined[["sequence","bpos1","bpos2","distance","label"]].to_csv(filename,index=False)
