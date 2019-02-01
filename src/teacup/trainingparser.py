@@ -11,6 +11,34 @@ from sklearn import svm
 from sklearn import linear_model
 from sklearn import naive_bayes
 
+class Simple1DClassifier:
+    """
+    input table needs to have column label on it
+    """
+
+    def __init__(self):
+        self.label_gt = -1 # greater than
+        self.label_lt = -1 # less than
+        self.threshold = 0
+
+    def train(self,xtrain,ytrain,threshold):
+        index = [ytrain[i] for i in range(len(xtrain)) if xtrain[i] >= threshold]
+        self.label_gt = max(index,key=index.count)
+        if self.label_gt == 1:
+            self.label_lt = 0
+        else:
+            self.label_lt = 1
+        self.threshold = threshold
+
+    def test(self,xtest):
+        predictions = []
+        for x in xtest:
+            if x >= self.threshold:
+                predictions.append(self.label_gt)
+            else:
+                predictions.append(self.label_lt)
+        return predictions
+
 class TrainingParser:
 
     def __init__(self, trainingpath):
@@ -89,6 +117,31 @@ class TrainingParser:
                 features.append(rowfeature + [row["distance"]])
             return features
 
+    def auc_simple_clf(self):
+        xtrain = self.training["distance"].values
+        ytrain = self.get_numeric_label().values
+        distances = self.training['distance'].unique()
+
+        fpr_list = np.array([0])
+        tpr_list = np.array([0])
+        for dist in sorted(distances):
+            scf = Simple1DClassifier()
+            scf.train(xtrain,ytrain,dist)
+            ypred = scf.test(xtrain)
+            print("Accuracy %f" % metrics.accuracy_score(ytrain, ypred))
+            fpr, tpr, _ = metrics.roc_curve(ytrain, ypred)
+            fpr_list = np.append(fpr_list,fpr[len(fpr)-2])
+            tpr_list = np.append(tpr_list,tpr[len(tpr)-2])
+
+        fpr_list = np.append(fpr_list,1)
+        tpr_list = np.append(tpr_list,1)
+
+        plt.scatter(fpr_list,tpr_list,s=5)
+        plt.plot(fpr_list, tpr_list, label="auc=%f" % (metrics.auc(fpr_list,tpr_list)))
+        plt.plot([0, 1], [0, 1], linestyle="--", color="red")
+        plt.legend(loc=4)
+        plt.show()
+
     def test_model(self,featuretype):
         """
         model:
@@ -109,20 +162,30 @@ class TrainingParser:
                 "naive bayes":naive_bayes.GaussianNB()
                }
 
-        for key in clfs:
-            clf = clfs[key].fit(x_train, y_train)
-            y_pred = clf.predict(x_train)
+        #for key in clfs:
+        key = "random forest"
+        clf = clfs[key].fit(x_train, y_train)
+        y_pred = clf.predict(x_train)
 
-            # https://stackoverflow.com/questions/25009284/how-to-plot-roc-curve-in-python
-            print("Accuracy %s: %f" % (key,metrics.accuracy_score(y_train, y_pred)))
+        # https://stackoverflow.com/questions/25009284/how-to-plot-roc-curve-in-python
+        # print("Accuracy %s: %f" % (key,metrics.accuracy_score(y_train, y_pred)))
 
-            #for i in range(len(y_train)):
-            #    print(y_train[i],y_pred[i])
+        tpr = 0
+        fpr = 0
+        for i in range(len(y_train)):
+            if y_train[i] == 1 and y_pred[i] == 1:
+                tpr += 1
+            elif y_train[i] == 0 and y_pred[i] == 1:
+                fpr += 1
+        print(tpr,list(y_train).count(1))
+        print(fpr,list(y_train).count(0))
 
-            # ROC curve
-            fpr, tpr, _ = metrics.roc_curve(y_train, y_pred)
-            auc = metrics.roc_auc_score(y_train, y_pred)
-            plt.plot(fpr,tpr,label="%s, training auc=%f" % (key,auc))
+        # ROC curve
+        fpr, tpr, _ = metrics.roc_curve(y_train, y_pred)
+        auc = metrics.roc_auc_score(y_train, y_pred)
+        plt.plot(fpr,tpr,label="%s, training auc=%f" % (key,auc))
+
+        ###
 
         plt.legend(loc=4)
         plt.show()
