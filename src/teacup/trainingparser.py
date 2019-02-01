@@ -117,7 +117,30 @@ class TrainingParser:
                 features.append(rowfeature + [row["distance"]])
             return features
 
-    def auc_simple_clf(self):
+    def calculate_fpr_tpr(self,ytrue,ypred):
+        if len(ytrue) != len(ypred):
+            print("the length of y-true and y-pred differ")
+            return 0
+        fp_count = 0
+        tp_count = 0
+        pos_count = 0
+        neg_count = 0
+        for i in range(len(ytrue)):
+            if ytrue[i] == 1:
+                pos_count += 1
+                if ypred[i] == 1:
+                    tp_count += 1
+            elif ytrue[i] == 0:
+                neg_count += 1
+                if ypred[i] == 1:
+                    fp_count += 1
+        fpr = float(fp_count)/neg_count
+        tpr = float(tp_count)/pos_count
+        return fpr,tpr
+
+    def roc_simple_clf(self):
+        # still numeric for now
+
         xtrain = self.training["distance"].values
         ytrain = self.get_numeric_label().values
         distances = self.training['distance'].unique()
@@ -128,19 +151,15 @@ class TrainingParser:
             scf = Simple1DClassifier()
             scf.train(xtrain,ytrain,dist)
             ypred = scf.test(xtrain)
-            print("Accuracy %f" % metrics.accuracy_score(ytrain, ypred))
-            fpr, tpr, _ = metrics.roc_curve(ytrain, ypred)
-            fpr_list = np.append(fpr_list,fpr[len(fpr)-2])
-            tpr_list = np.append(tpr_list,tpr[len(tpr)-2])
+            #print("Accuracy %f" % metrics.accuracy_score(ytrain, ypred))
+            fpr,tpr = self.calculate_fpr_tpr(ytrain, ypred)
+            fpr_list = np.append(fpr_list,fpr)
+            tpr_list = np.append(tpr_list,tpr)
 
         fpr_list = np.append(fpr_list,1)
         tpr_list = np.append(tpr_list,1)
 
-        plt.scatter(fpr_list,tpr_list,s=5)
-        plt.plot(fpr_list, tpr_list, label="auc=%f" % (metrics.auc(fpr_list,tpr_list)))
-        plt.plot([0, 1], [0, 1], linestyle="--", color="red")
-        plt.legend(loc=4)
-        plt.show()
+        return fpr_list,tpr_list
 
     def test_model(self,featuretype):
         """
@@ -150,42 +169,35 @@ class TrainingParser:
         """
 
         x_train = self.get_features(featuretype)
-
         y_train = self.get_numeric_label().values
 
         clfs = {
                 "decision tree":tree.DecisionTreeClassifier(),
                 "random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0),
-                "SVM":svm.SVC(kernel="rbf",gamma=1.0/5),
+                "SVM":svm.SVC(kernel="rbf",gamma=1.0/5,probability=True),
                 "log regression":linear_model.LogisticRegression(),
+                "simple":Simple1DClassifier(),
                 "gradient boosting":ensemble.GradientBoostingClassifier(),
                 "naive bayes":naive_bayes.GaussianNB()
                }
 
-        #for key in clfs:
-        key = "random forest"
-        clf = clfs[key].fit(x_train, y_train)
-        y_pred = clf.predict(x_train)
+        for key in clfs:
+            if key == "simple":
+                fpr,tpr = self.roc_simple_clf()
+                auc = metrics.auc(fpr,tpr)
+                plt.plot(fpr,tpr,label="%s, training auc=%f" % (key,auc))
+            else:
+                clf = clfs[key].fit(x_train, y_train)
+                y_pred = clf.predict_proba(x_train)[:, 1]
 
-        # https://stackoverflow.com/questions/25009284/how-to-plot-roc-curve-in-python
-        # print("Accuracy %s: %f" % (key,metrics.accuracy_score(y_train, y_pred)))
+                # https://stackoverflow.com/questions/25009284/how-to-plot-roc-curve-in-python
+                # print("Accuracy %s: %f" % (key,metrics.accuracy_score(y_train, y_pred)))
 
-        tpr = 0
-        fpr = 0
-        for i in range(len(y_train)):
-            if y_train[i] == 1 and y_pred[i] == 1:
-                tpr += 1
-            elif y_train[i] == 0 and y_pred[i] == 1:
-                fpr += 1
-        print(tpr,list(y_train).count(1))
-        print(fpr,list(y_train).count(0))
+                # ROC curve
+                fpr, tpr, _ = metrics.roc_curve(y_train, y_pred)
+                auc = metrics.roc_auc_score(y_train, y_pred)
+                plt.plot(fpr,tpr,label="%s, training auc=%f" % (key,auc))
 
-        # ROC curve
-        fpr, tpr, _ = metrics.roc_curve(y_train, y_pred)
-        auc = metrics.roc_auc_score(y_train, y_pred)
-        plt.plot(fpr,tpr,label="%s, training auc=%f" % (key,auc))
-
-        ###
-
+        plt.plot([0, 1], [0, 1], linestyle="--", color="red")
         plt.legend(loc=4)
         plt.show()
