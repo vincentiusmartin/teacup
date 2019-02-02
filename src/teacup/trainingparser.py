@@ -215,3 +215,19 @@ class TrainingParser:
         plt.plot([0, 1], [0, 1], linestyle="--", color="red")
         plt.legend(loc=4)
         plt.show()
+
+
+    def display_output(fpr_list, tpr_list, classifier_names):
+        """
+            This plots the average ROC curve of all the classifiers in a single plot
+        """
+        for i in range(len(fpr_list)):
+            plt.plot(fpr_list[i], tpr_list[i], lw=2, alpha=0.3, label='Average ROC for %s' % classifier_names[i])
+
+        # Show the ROC curves for all classifiers on the same plot
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Average ROC Curves for All Classifiers')
+        plt.legend(loc="lower right")
+        plt.savefig('Avg_ROC.png')
+        plt.show()
