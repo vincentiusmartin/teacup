@@ -92,20 +92,20 @@ def train(k, x ,y):
     tprs_upper = np.minimum(mean_tprs + std, 1)
     tprs_lower = mean_tprs - std
 
-
     plt.plot(base_fpr, mean_tprs, 'b', label = "Average AUC:" + str(sum(aucs_val)/len(aucs_val)))
     plt.fill_between(base_fpr, tprs_lower, tprs_upper, color='grey', alpha=0.3)
 
     plt.plot([0, 1], [0, 1],'r--')
-    plt.xlim([0, 1])
-    plt.ylim([0, 1])
+    plt.xlim((0, 1))
+    plt.ylim(0, 1)
+    plt.title("Logistic Regression ROC Curve with 10 Fold Cross Validation")
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
     plt.axes().set_aspect('equal', 'datalim')
     plt.legend(loc="lower right")
-    plt.show()
     plt.savefig('Avg_ROC.png')
-
+    plt.show()
+    
     #return fpr_list, tpr_list
 
 def display_output(fpr_list, tpr_list):
