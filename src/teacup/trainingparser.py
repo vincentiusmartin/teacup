@@ -197,8 +197,8 @@ class TrainingParser:
                 "random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0),
                 "SVM":svm.SVC(kernel="rbf",gamma=1.0/5,probability=True),
                 #"log regression":linear_model.LogisticRegression(),
-                #"simple":Simple1DClassifier(),
-                ##"gradient boosting":ensemble.GradientBoostingClassifier(),
+                "simple":Simple1DClassifier(),
+                #"gradient boosting":ensemble.GradientBoostingClassifier(),
                 #"naive bayes":naive_bayes.GaussianNB()
                }
 
@@ -215,16 +215,18 @@ class TrainingParser:
         auc_list = []
          # Compute ROC curve and ROC area with averaging for each classifier
         for key in clfs:
-            cv = KFold(n_splits=10,shuffle=True)
-            # initialize a list to store the average fpr, tpr, and auc
-            base_fpr = np.linspace(0, 1, 101)
-            tprs = []
-            aucs_val = []
-
             if key == "simple":
-                base_fpr,tprs = self.roc_simple_clf()
-                aucs_val.append(metrics.auc(fpr,tpr))
+                fpr,tpr = self.roc_simple_clf()
+                auc = metrics.auc(fpr,tpr)
+                fpr_list.append(fpr)
+                tpr_list.append(tpr)
+                auc_list.append(auc)
             else:
+                cv = KFold(n_splits=10,shuffle=True)
+                tprs = []
+                aucs_val = []
+                # initialize a list to store the average fpr, tpr, and auc
+                base_fpr = np.linspace(0, 1, 101)
                 print("Cross validation on %s" % key)
                 i = 1
                 for train, test in cv.split(x_train,y_train):
@@ -242,17 +244,17 @@ class TrainingParser:
                     aucs_val.append(auc)
                     i += 1
 
-            # calculate mean true positive rate
-            tprs = np.array(tprs)
-            mean_tprs = tprs.mean(axis=0)
+                    # calculate mean true positive rate
+                tprs = np.array(tprs)
+                mean_tprs = tprs.mean(axis=0)
 
-            # calculate mean auc
-            aucs_val = np.array(aucs_val)
-            mean_aucs = aucs_val.mean(axis=0)
+                # calculate mean auc
+                aucs_val = np.array(aucs_val)
+                mean_aucs = aucs_val.mean(axis=0)
 
-            fpr_list.append(base_fpr)
-            tpr_list.append(mean_tprs)
-            auc_list.append(mean_aucs)
+                fpr_list.append(base_fpr)
+                tpr_list.append(mean_tprs)
+                auc_list.append(mean_aucs)
 
         return fpr_list, tpr_list, auc_list
 
@@ -291,7 +293,7 @@ class TrainingParser:
         """
         plt.plot([0, 1], [0, 1], linestyle="--", color="red", alpha=0.1)
         for i in range(len(fpr_list)):
-            plt.plot(fpr_list[i], tpr_list[i], lw=2, alpha=0.4, label='%s average ROC, AUC %f' % (classifier_names[i], auc_list[i]))
+            plt.plot(fpr_list[i], tpr_list[i], lw=2, alpha=0.4, label='%s, AUC %f' % (classifier_names[i], auc_list[i]))
 
         # Show the ROC curves for all classifiers on the same plot
         plt.xlabel('False Positive Rate')
