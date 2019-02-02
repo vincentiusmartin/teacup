@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy as np
 import itertools
-from scipy import interp
+import scipy
 
 from sklearn import tree
 from sklearn import metrics
@@ -181,30 +181,29 @@ class TrainingParser:
 
         return fpr_list,tpr_list
 
-    def test_model(self,featuretype, testing_type="cv"):
+    def test_model(self,feature_type, testing_type="cv"):
         """
         model:
             numeric: distance as it is
             categorical: use one hot encoder
         """
 
-        x_train = self.get_features(featuretype)
+        x_train = self.get_features(feature_type)
         y_train = self.get_numeric_label().values
         #print(len(x_train),len(y_train))
 
         clfs = {
-                "decision tree":tree.DecisionTreeClassifier(),
+                #"decision tree":tree.DecisionTreeClassifier(),
                 "random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0),
                 "SVM":svm.SVC(kernel="rbf",gamma=1.0/5,probability=True),
                 #"log regression":linear_model.LogisticRegression(),
                 #"simple":Simple1DClassifier(),
-                "gradient boosting":ensemble.GradientBoostingClassifier(),
-                "naive bayes":naive_bayes.GaussianNB()
+                ##"gradient boosting":ensemble.GradientBoostingClassifier(),
+                #"naive bayes":naive_bayes.GaussianNB()
                }
 
         if testing_type == "cv":
             fpr_list, tpr_list, auc_list = self.test_on_train_cv(clfs, x_train, y_train)
-
         else:
             fpr_list, tpr_list, auc_list = self.test_on_train(clfs,x_train,y_train)
 
@@ -213,7 +212,7 @@ class TrainingParser:
     def test_on_train_cv(self,clfs,x_train,y_train):
         fpr_list = []
         tpr_list = []
-        avg_auc = []
+        auc_list = []
          # Compute ROC curve and ROC area with averaging for each classifier
         for key in clfs:
             cv = KFold(n_splits=10,shuffle=True)
@@ -226,6 +225,7 @@ class TrainingParser:
                 base_fpr,tprs = self.roc_simple_clf()
                 aucs_val.append(metrics.auc(fpr,tpr))
             else:
+                print("Cross validation on %s" % key)
                 i = 1
                 for train, test in cv.split(x_train,y_train):
                     model = clfs[key].fit(x_train[train], y_train[train])
@@ -233,7 +233,10 @@ class TrainingParser:
                     fpr, tpr, _ = metrics.roc_curve(y_train[test], y_score[:, 1])
                     auc = metrics.roc_auc_score(y_train[test], y_score[:,1])
                     print("fold " + str(i) + " AUC: " + str(auc))
-                    tpr = interp(base_fpr, fpr, tpr)
+                    # vmartin: please have the package name instead of using
+                    # the function directly so we know where does the function
+                    # come from :)
+                    tpr = scipy.interp(base_fpr, fpr, tpr)
                     tpr[0] = 0.0
                     tprs.append(tpr)
                     aucs_val.append(auc)
@@ -243,15 +246,15 @@ class TrainingParser:
             tprs = np.array(tprs)
             mean_tprs = tprs.mean(axis=0)
 
-            # calculate mean auc 
+            # calculate mean auc
             aucs_val = np.array(aucs_val)
             mean_aucs = aucs_val.mean(axis=0)
 
             fpr_list.append(base_fpr)
             tpr_list.append(mean_tprs)
-            avg_auc.append(mean_aucs)
-            
-        return fpr_list, tpr_list, avg_auc
+            auc_list.append(mean_aucs)
+
+        return fpr_list, tpr_list, auc_list
 
 
     def test_on_train(self,clfs,x_train,y_train):
@@ -286,8 +289,9 @@ class TrainingParser:
         """
             This plots the average ROC curve of all the classifiers in a single plot
         """
+        plt.plot([0, 1], [0, 1], linestyle="--", color="red", alpha=0.1)
         for i in range(len(fpr_list)):
-            plt.plot(fpr_list[i], tpr_list[i], lw=2, alpha=0.3, label='Average ROC for %s with AUC %d' % (classifier_names[i], auc_list[i]))
+            plt.plot(fpr_list[i], tpr_list[i], lw=2, alpha=0.4, label='%s average ROC, AUC %f' % (classifier_names[i], auc_list[i]))
 
         # Show the ROC curves for all classifiers on the same plot
         plt.xlabel('False Positive Rate')
