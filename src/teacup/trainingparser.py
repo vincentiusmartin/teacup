@@ -75,7 +75,22 @@ class TrainingParser:
 
     # ======== Training and testing modelss ========
 
-    def extract_kmer_features(self,seq,bpos1,bpos2):
+    def extract_kmer_feature(self,seq):
+        nucleotides = ['A','C','G','T']
+        feature = []
+        for k in range(1,4):
+            perm = ["".join(p) for p in itertools.product(nucleotides, repeat=k)]
+            for i in range(len(seq)):
+                print(seq[i:i+k])
+                for kmer in perm:
+                    if seq[i:i+k] == kmer:
+                        feature.append(1)
+                    else:
+                        feature.append(0)
+                print(feature)
+        return feature
+
+    def extract_kmer_features_bpos(self,seq,bpos1,bpos2):
         span = 5
         bpos = [bpos1 - 1, bpos2 - 1] # adjustment -1 for programming
         nucleotides = ['A','C','G','T']
@@ -85,17 +100,9 @@ class TrainingParser:
         end = bpos2 + span + 1
 
         feature = []
-        xx=0
-        for k in range(1,4):
-            perm = ["".join(p) for p in itertools.product(nucleotides, repeat=k)]
-            for pos in bpos:
-                for i in range(pos-span,pos+span+1):
-                    for kmer in perm:
-                        #print(seq[i:i+k],kmer)
-                        if seq[i:i+k] == kmer:
-                            feature.append(1)
-                        else:
-                            feature.append(0)
+        for pos in bpos:
+            spanseq = seq[pos-span:pos+span+1]
+            feature += self.extract_kmer_feature(spanseq)
         return feature
 
     def get_features(self,type="distance-numeric"):
@@ -103,19 +110,22 @@ class TrainingParser:
         type:
             distance-numeric
             distance-categorical
-            sequence
+            sites-centered
+            linker
         """
         if type == "distance-numeric":
             return self.training["distance"].values.reshape((-1,1))
         elif type == "distance-categorical":
             one_hot = pd.get_dummies(self.training['distance'])
             return  one_hot.values.tolist()
-        elif type == "sequence":
+        elif type == "sites-centered":
             features = []
             for idx,row in self.training.iterrows():
-                rowfeature = self.extract_kmer_features(row["sequence"],row["bpos1"],row["bpos2"])
+                rowfeature = self.extract_kmer_features_bpos(row["sequence"],row["bpos1"],row["bpos2"])
                 features.append(rowfeature + [row["distance"]])
             return features
+        #elif type == "linker":
+
 
     def calculate_fpr_tpr(self,ytrue,ypred):
         if len(ytrue) != len(ypred):
@@ -169,7 +179,7 @@ class TrainingParser:
         """
 
         x_train = self.get_features(featuretype)
-        y_train = self.get_numeric_label().values
+        '''y_train = self.get_numeric_label().values
 
         clfs = {
                 "decision tree":tree.DecisionTreeClassifier(),
@@ -181,11 +191,12 @@ class TrainingParser:
                 "naive bayes":naive_bayes.GaussianNB()
                }
 
+        auc_total = 0
         for key in clfs:
             if key == "simple":
                 fpr,tpr = self.roc_simple_clf()
                 auc = metrics.auc(fpr,tpr)
-                plt.plot(fpr,tpr,label="%s, training auc=%f" % (key,auc))
+                plt.plot(fpr,tpr,label="distance threshold, training auc=%f" % auc,linestyle=":", color="orange")
             else:
                 clf = clfs[key].fit(x_train, y_train)
                 y_pred = clf.predict_proba(x_train)[:, 1]
@@ -197,7 +208,11 @@ class TrainingParser:
                 fpr, tpr, _ = metrics.roc_curve(y_train, y_pred)
                 auc = metrics.roc_auc_score(y_train, y_pred)
                 plt.plot(fpr,tpr,label="%s, training auc=%f" % (key,auc))
+            auc_total += auc
+        print(len(clfs))
+        print("Average AUC %f"%(auc_total/len(clfs)))
 
         plt.plot([0, 1], [0, 1], linestyle="--", color="red")
         plt.legend(loc=4)
         plt.show()
+        '''
