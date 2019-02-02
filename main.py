@@ -18,4 +18,4 @@ if __name__=="__main__":
 
     train = trainingparser.TrainingParser(trainingpath)
     #train.auc_simple_clf()
-    train.train_from_distance(categorical=True)
+    train.test_model("sites-centered")
