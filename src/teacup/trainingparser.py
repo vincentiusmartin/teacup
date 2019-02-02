@@ -81,20 +81,17 @@ class TrainingParser:
         for k in range(1,4):
             perm = ["".join(p) for p in itertools.product(nucleotides, repeat=k)]
             for i in range(len(seq)):
-                print(seq[i:i+k])
                 for kmer in perm:
                     if seq[i:i+k] == kmer:
                         feature.append(1)
                     else:
                         feature.append(0)
-                print(feature)
-        return feature
+        return np.asarray(feature)
 
     def extract_kmer_features_bpos(self,seq,bpos1,bpos2):
         span = 5
         bpos = [bpos1 - 1, bpos2 - 1] # adjustment -1 for programming
         nucleotides = ['A','C','G','T']
-        features = []
 
         start = bpos1 - span
         end = bpos2 + span + 1
@@ -102,8 +99,9 @@ class TrainingParser:
         feature = []
         for pos in bpos:
             spanseq = seq[pos-span:pos+span+1]
-            feature += self.extract_kmer_feature(spanseq)
-        return feature
+            feature.extend(self.extract_kmer_feature(spanseq))
+            break
+        return feature[:200]
 
     def get_features(self,type="distance-numeric"):
         """
@@ -122,7 +120,9 @@ class TrainingParser:
             features = []
             for idx,row in self.training.iterrows():
                 rowfeature = self.extract_kmer_features_bpos(row["sequence"],row["bpos1"],row["bpos2"])
-                features.append(rowfeature + [row["distance"]])
+                #print(rowfeature)
+                print(rowfeature)
+                features.append(rowfeature) # + [row["distance"]]
             return features
         #elif type == "linker":
 
@@ -179,7 +179,8 @@ class TrainingParser:
         """
 
         x_train = self.get_features(featuretype)
-        '''y_train = self.get_numeric_label().values
+        y_train = self.get_numeric_label().values
+        print(len(x_train),len(y_train))
 
         clfs = {
                 "decision tree":tree.DecisionTreeClassifier(),
@@ -209,10 +210,8 @@ class TrainingParser:
                 auc = metrics.roc_auc_score(y_train, y_pred)
                 plt.plot(fpr,tpr,label="%s, training auc=%f" % (key,auc))
             auc_total += auc
-        print(len(clfs))
         print("Average AUC %f"%(auc_total/len(clfs)))
 
         plt.plot([0, 1], [0, 1], linestyle="--", color="red")
         plt.legend(loc=4)
         plt.show()
-        '''
