@@ -125,7 +125,14 @@ class TrainingParser:
                 rowfeature = self.extract_kmer_features_bpos(row["sequence"],row["bpos1"],row["bpos2"])
                 features.append(rowfeature) # + [row["distance"]]
             return features
-        #elif type == "linker":
+        elif type == "sites-linker":
+            features = []
+            for idx,row in self.training.iterrows():
+                # since the binding pos is one index, we need to -1
+                midpos = row["bpos2"] - row["bpos1"] - 1
+                seq = row["sequence"][midpos-8:midpos+8]
+                features.append(self.extract_kmer_feature(seq))
+            return features
 
 
     def calculate_fpr_tpr(self,ytrue,ypred):
