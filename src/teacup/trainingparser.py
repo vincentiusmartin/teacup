@@ -89,7 +89,7 @@ class TrainingParser:
         return np.asarray(feature)
 
     def extract_kmer_features_bpos(self,seq,bpos1,bpos2):
-        span = 5
+        span = 4
         bpos = [bpos1 - 1, bpos2 - 1] # adjustment -1 for programming
         nucleotides = ['A','C','G','T']
 
@@ -98,10 +98,13 @@ class TrainingParser:
 
         feature = []
         for pos in bpos:
+            if pos - span < 0:
+                start = 0
+            else:
+                start = pos - span
             spanseq = seq[pos-span:pos+span+1]
             feature.extend(self.extract_kmer_feature(spanseq))
-            break
-        return feature[:200]
+        return feature
 
     def get_features(self,type="distance-numeric"):
         """
@@ -120,8 +123,6 @@ class TrainingParser:
             features = []
             for idx,row in self.training.iterrows():
                 rowfeature = self.extract_kmer_features_bpos(row["sequence"],row["bpos1"],row["bpos2"])
-                #print(rowfeature)
-                print(rowfeature)
                 features.append(rowfeature) # + [row["distance"]]
             return features
         #elif type == "linker":
