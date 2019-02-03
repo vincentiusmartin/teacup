@@ -131,35 +131,43 @@ class TrainingParser:
                 features.append(self.extract_kmer_feature(seq))
             return features
 
-    def roc_simple_clf(self,fold=0):
+    def roc_simple_clf(self,n_splits=1):
         # still numeric for now
         x_train = self.training["distance"].values
         y_train = self.get_numeric_label().values
         distances = self.training['distance'].unique()
-        if fold > 0:
-            cv = model_selection.KFold(n_splits=10,shuffle=True)
-            for train, test in cv.split(x_train,y_train):
-                # train, test are CV indexes
-                scf = simpleclassifier.Simple1DClassifier()
-                scf.fit(x_train[train],y_train[train],distances)
-                y_pred_test = scf.test(x_train[test])
-                #print(metrics.accuracy_score(y_train[test], y_pred_test))
+
+        if n_splits > 1:
+            cv = model_selection.KFold(n_splits=n_splits,shuffle=True)
+            split = cv.split(x_train,y_train)
         else:
-            fpr_list = np.array([0])
-            tpr_list = np.array([0])
+            split = [(range(len(x_train)),range(len(y_train)))]
+
+        fpr_all = []
+        tpr_all = []
+        auc_all = []
+
+        for train, test in split:
+            fpr_list = [0]
+            tpr_list = [0]
             for dist in sorted(distances):
-                scf = Simple1DClassifier()
-                scf.fit_on_threshold(x_train,y_train,dist)
-                y_pred = scf.test(x_train)
+                scf = simpleclassifier.Simple1DClassifier()
+                scf.fit_on_thres(x_train[train],y_train[train],dist)
+                y_pred = scf.test(x_train[test])
                 #print("Accuracy %f" % metrics.accuracy_score(ytrain, ypred))
-                fpr,tpr = self.calculate_fpr_tpr(y_train, y_pred)
-                fpr_list = np.append(fpr_list,fpr)
-                tpr_list = np.append(tpr_list,tpr)
+                fpr,tpr = calculate_fpr_tpr(y_train[test], y_pred)
+                fpr_list.append(fpr)
+                tpr_list.append(tpr)
 
-            fpr_list = np.append(fpr_list,1)
-            tpr_list = np.append(tpr_list,1)
 
-            return fpr_list,tpr_list
+            fpr_list.append(1)
+            tpr_list.append(1)
+
+            auc = metrics.auc(fpr_list,tpr_list)
+            auc_all.append(auc)
+            fpr_all.append(fpr_list)
+            tpr_all.append(tpr_list)
+        return fpr_all,tpr_all,auc_all
 
     def test_model(self,feature_type, testing_type="cv"):
         """
@@ -173,78 +181,88 @@ class TrainingParser:
         #print(len(x_train),len(y_train))
 
         clfs = {
-                #"decision tree":tree.DecisionTreeClassifier(),
-                #"random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0),
-                #"SVM":svm.SVC(kernel="rbf",gamma=1.0/5,probability=True),
+                "decision tree":tree.DecisionTreeClassifier(),
+                "random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0),
+                "SVM":svm.SVC(kernel="rbf",gamma=1.0/5,probability=True),
                 #"log regression":linear_model.LogisticRegression(),
-                "simple":Simple1DClassifier(),
+                "simple":simpleclassifier.Simple1DClassifier(),
                 #"gradient boosting":ensemble.GradientBoostingClassifier(),
                 #"naive bayes":naive_bayes.GaussianNB()
                }
 
         if testing_type == "cv":
-            fpr_list, tpr_list, auc_list = self.test_on_train_cv(clfs, x_train, y_train)
+            fpr_list, tpr_list, auc_list = self.test_with_cv(clfs, x_train, y_train)
         else:
             fpr_list, tpr_list, auc_list = self.test_on_train(clfs,x_train,y_train)
 
         self.display_output(fpr_list, tpr_list, auc_list, list(clfs.keys()))
 
-    def test_on_train_cv(self,clfs,x_train,y_train):
+    def test_with_cv(self,clfs,x_train,y_train,fold=10):
         fpr_list = []
         tpr_list = []
         auc_list = []
          # Compute ROC curve and ROC area with averaging for each classifier
         for key in clfs:
+            base_fpr = np.linspace(0, 1, 101)
+            tprs = []
+            aucs_val = []
             if key == "simple":
-                fpr,tpr = self.roc_simple_clf()
-                auc = metrics.auc(fpr,tpr)
-                fpr_list.append(fpr)
-                tpr_list.append(tpr)
-                auc_list.append(auc)
+                fprs_simple,tprs_simple,aucs_val = self.roc_simple_clf(n_splits=fold)
+                for i in range(0,len(fprs_simple)):
+                    tpr = scipy.interp(base_fpr, fprs_simple[i], tprs_simple[i])
+                    tprs.append(tpr)
             else:
-                cv = model_selection.KFold(n_splits=10,shuffle=True)
-                tprs = []
-                aucs_val = []
+                cv = model_selection.KFold(n_splits=fold,shuffle=True)
                 # initialize a list to store the average fpr, tpr, and auc
-                base_fpr = np.linspace(0, 1, 101)
                 print("Cross validation on %s" % key)
                 i = 1
-                for train, test in cv.split(x_train,y_train):
-                    model = clfs[key].fit(x_train[train], y_train[train])
-                    y_score = model.predict_proba(x_train[test])
-                    fpr, tpr, _ = metrics.roc_curve(y_train[test], y_score[:, 1])
-                    auc = metrics.roc_auc_score(y_train[test], y_score[:,1])
+                for train_idx,test_idx in cv.split(x_train,y_train):
+                    # need to convert this with index, somehow cannot do
+                    # x_train[train_idx] for multi features
+                    data_train = [x_train[i] for i in train_idx]
+                    data_test = [x_train[i] for i in test_idx]
+                    lbl_train = [y_train[i] for i in train_idx]
+                    lbl_test = [y_train[i] for i in test_idx]
+
+                    model = clfs[key].fit(data_train, lbl_train)
+                    y_score = model.predict_proba(data_test)
+                    fpr, tpr, _ = metrics.roc_curve(lbl_test, y_score[:, 1])
+                    auc = metrics.roc_auc_score(lbl_test, y_score[:,1])
                     print("fold " + str(i) + " AUC: " + str(auc))
                     # vmartin: please have the package name instead of using
                     # the function directly so we know where does the function
                     # come from :)
                     tpr = scipy.interp(base_fpr, fpr, tpr)
-                    tpr[0] = 0.0
                     tprs.append(tpr)
                     aucs_val.append(auc)
                     i += 1
 
-                    # calculate mean true positive rate
-                    tprs = np.array(tprs)
-                    mean_tprs = tprs.mean(axis=0)
+            # calculate mean true positive rate
+            tprs = np.array(tprs)
+            mean_tprs = tprs.mean(axis=0)
 
-                    # calculate mean auc
-                    aucs_val = np.array(aucs_val)
-                    mean_aucs = aucs_val.mean(axis=0)
+            # calculate mean auc
+            aucs_val = np.array(aucs_val)
+            mean_aucs = aucs_val.mean(axis=0)
 
-                    fpr_list.append(base_fpr)
-                    tpr_list.append(mean_tprs)
-                    auc_list.append(mean_aucs)
+            fpr_list.append(base_fpr)
+            tpr_list.append(mean_tprs)
+            auc_list.append(mean_aucs)
 
         return fpr_list, tpr_list, auc_list
 
     def test_on_train(self,clfs,x_train,y_train):
         auc_total = 0
+        fpr_list = []
+        tpr_list = []
+        auc_list = []
         for key in clfs:
             if key == "simple":
-                fpr,tpr = self.roc_simple_clf()
-                auc = metrics.auc(fpr,tpr)
-                plt.plot(fpr,tpr,label="distance threshold, training auc=%f" % auc,linestyle=":", color="orange")
+                fpr,tpr,auc = self.roc_simple_clf()
+                fpr = fpr[0]
+                tpr = tpr[0]
+                auc = auc[0]
+                #plt.plot(fpr,tpr,label="distance threshold, training auc=%f" % auc,linestyle=":", color="orange")
             else:
                 print("key is:", key)
                 clf = clfs[key].fit(x_train, y_train)
@@ -256,14 +274,15 @@ class TrainingParser:
                 # ROC curve
                 fpr, tpr, _ = metrics.roc_curve(y_train, y_pred)
                 auc = metrics.roc_auc_score(y_train, y_pred)
-                plt.plot(fpr,tpr,label="%s, training auc=%f" % (key,auc))
+                #plt.plot(fpr,tpr,label="%s, training auc=%f" % (key,auc))
 
+            fpr_list.append(fpr)
+            tpr_list.append(tpr)
+            auc_list.append(auc)
             auc_total += auc
         print("Average AUC %f"%(auc_total/len(clfs)))
 
-        plt.plot([0, 1], [0, 1], linestyle="--", color="red")
-        plt.legend(loc=4)
-        plt.show()
+        return fpr_list, tpr_list, auc_list
 
 
     def display_output(self, fpr_list, tpr_list, auc_list, classifier_names):

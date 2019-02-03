@@ -16,12 +16,35 @@ class Simple1DClassifier:
         self.label_lt = label_lt
         self.threshold = threshold
 
-    def fit(self,x_train,y_train,thresholds):
+    def label_from_dist(self,x_train,y_train,threshold):
+        index = [y_train[i] for i in range(len(x_train)) if x_train[i] >= threshold]
+        label_gt = max(index,key=index.count)
+        if label_gt == 1:
+            label_lt = 0
+        else:
+            label_lt = 1
+        threshold = threshold
+        return label_gt,label_lt,threshold
+
+    def predict_with_thres(self,xtest,label_gt,label_lt,threshold):
+        predictions = []
+        for x in xtest:
+            if x >= threshold:
+                predictions.append(label_gt)
+            else:
+                predictions.append(label_lt)
+        return predictions
+
+    def fit_on_thres(self,x_train,y_train,threshold):
+        label_gt, label_lt, threshold = self.label_from_dist(x_train,y_train,threshold)
+        self.update_params(label_gt, label_lt, threshold)
+
+    def fit_best_thres(self,x_train,y_train,threslist):
         best_thres = -1
         best_acc = -1
         best_lgt = -1
         best_llt = -1
-        for thres in thresholds:
+        for thres in threslist:
             label_gt,label_lt,threshold = self.label_from_dist(x_train,y_train,thres)
             #
             y_pred = self.predict_thres(x_train, label_gt, label_lt, threshold)
@@ -35,28 +58,5 @@ class Simple1DClassifier:
         self.label_lt = best_llt
         self.threshold = best_thres
 
-    def label_from_dist(self,x_train,y_train,threshold):
-        index = [y_train[i] for i in range(len(x_train)) if x_train[i] >= threshold]
-        label_gt = max(index,key=index.count)
-        if label_gt == 1:
-            label_lt = 0
-        else:
-            label_lt = 1
-        threshold = threshold
-        return label_gt,label_lt,threshold
-
-    def fit_on_threshold(self,x_train,y_train,threshold):
-        label_gt, label_lt, threshold = sep_label_from_dist(x_train,y_train,threshold)
-        update_params(label_gt, label_lt, threshold)
-
-    def predict_thres(self,xtest,label_gt,label_lt,threshold):
-        predictions = []
-        for x in xtest:
-            if x >= threshold:
-                predictions.append(label_gt)
-            else:
-                predictions.append(label_lt)
-        return predictions
-
     def test(self,xtest):
-        return self.predict_thres(xtest, self.label_gt, self.label_lt, self.threshold)
+        return self.predict_with_thres(xtest, self.label_gt, self.label_lt, self.threshold)
