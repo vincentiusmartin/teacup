@@ -11,35 +11,30 @@ from sklearn import ensemble
 from sklearn import svm
 from sklearn import linear_model
 from sklearn import naive_bayes
-from sklearn.model_selection import KFold
+from sklearn import model_selection
 
-class Simple1DClassifier:
-    """
-    input table needs to have column label on it
-    """
+from teacup.training import simpleclassifier
 
-    def __init__(self):
-        self.label_gt = -1 # greater than
-        self.label_lt = -1 # less than
-        self.threshold = 0
-
-    def train(self,xtrain,ytrain,threshold):
-        index = [ytrain[i] for i in range(len(xtrain)) if xtrain[i] >= threshold]
-        self.label_gt = max(index,key=index.count)
-        if self.label_gt == 1:
-            self.label_lt = 0
-        else:
-            self.label_lt = 1
-        self.threshold = threshold
-
-    def test(self,xtest):
-        predictions = []
-        for x in xtest:
-            if x >= self.threshold:
-                predictions.append(self.label_gt)
-            else:
-                predictions.append(self.label_lt)
-        return predictions
+def calculate_fpr_tpr(ytrue,ypred):
+    if len(ytrue) != len(ypred):
+        print("the length of y-true and y-pred differ")
+        return 0
+    fp_count = 0
+    tp_count = 0
+    pos_count = 0
+    neg_count = 0
+    for i in range(len(ytrue)):
+        if ytrue[i] == 1:
+            pos_count += 1
+            if ypred[i] == 1:
+                tp_count += 1
+        elif ytrue[i] == 0:
+            neg_count += 1
+            if ypred[i] == 1:
+                fp_count += 1
+    fpr = float(fp_count)/neg_count
+    tpr = float(tp_count)/pos_count
+    return fpr,tpr
 
 class TrainingParser:
 
@@ -136,50 +131,35 @@ class TrainingParser:
                 features.append(self.extract_kmer_feature(seq))
             return features
 
-
-    def calculate_fpr_tpr(self,ytrue,ypred):
-        if len(ytrue) != len(ypred):
-            print("the length of y-true and y-pred differ")
-            return 0
-        fp_count = 0
-        tp_count = 0
-        pos_count = 0
-        neg_count = 0
-        for i in range(len(ytrue)):
-            if ytrue[i] == 1:
-                pos_count += 1
-                if ypred[i] == 1:
-                    tp_count += 1
-            elif ytrue[i] == 0:
-                neg_count += 1
-                if ypred[i] == 1:
-                    fp_count += 1
-        fpr = float(fp_count)/neg_count
-        tpr = float(tp_count)/pos_count
-        return fpr,tpr
-
-    def roc_simple_clf(self):
+    def roc_simple_clf(self,fold=0):
         # still numeric for now
-
-        xtrain = self.training["distance"].values
-        ytrain = self.get_numeric_label().values
+        x_train = self.training["distance"].values
+        y_train = self.get_numeric_label().values
         distances = self.training['distance'].unique()
+        if fold > 0:
+            cv = model_selection.KFold(n_splits=10,shuffle=True)
+            for train, test in cv.split(x_train,y_train):
+                # train, test are CV indexes
+                scf = simpleclassifier.Simple1DClassifier()
+                scf.fit(x_train[train],y_train[train],distances)
+                y_pred_test = scf.test(x_train[test])
+                #print(metrics.accuracy_score(y_train[test], y_pred_test))
+        else:
+            fpr_list = np.array([0])
+            tpr_list = np.array([0])
+            for dist in sorted(distances):
+                scf = Simple1DClassifier()
+                scf.fit_on_threshold(x_train,y_train,dist)
+                y_pred = scf.test(x_train)
+                #print("Accuracy %f" % metrics.accuracy_score(ytrain, ypred))
+                fpr,tpr = self.calculate_fpr_tpr(y_train, y_pred)
+                fpr_list = np.append(fpr_list,fpr)
+                tpr_list = np.append(tpr_list,tpr)
 
-        fpr_list = np.array([0])
-        tpr_list = np.array([0])
-        for dist in sorted(distances):
-            scf = Simple1DClassifier()
-            scf.train(xtrain,ytrain,dist)
-            ypred = scf.test(xtrain)
-            #print("Accuracy %f" % metrics.accuracy_score(ytrain, ypred))
-            fpr,tpr = self.calculate_fpr_tpr(ytrain, ypred)
-            fpr_list = np.append(fpr_list,fpr)
-            tpr_list = np.append(tpr_list,tpr)
+            fpr_list = np.append(fpr_list,1)
+            tpr_list = np.append(tpr_list,1)
 
-        fpr_list = np.append(fpr_list,1)
-        tpr_list = np.append(tpr_list,1)
-
-        return fpr_list,tpr_list
+            return fpr_list,tpr_list
 
     def test_model(self,feature_type, testing_type="cv"):
         """
@@ -194,8 +174,8 @@ class TrainingParser:
 
         clfs = {
                 #"decision tree":tree.DecisionTreeClassifier(),
-                "random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0),
-                "SVM":svm.SVC(kernel="rbf",gamma=1.0/5,probability=True),
+                #"random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0),
+                #"SVM":svm.SVC(kernel="rbf",gamma=1.0/5,probability=True),
                 #"log regression":linear_model.LogisticRegression(),
                 "simple":Simple1DClassifier(),
                 #"gradient boosting":ensemble.GradientBoostingClassifier(),
@@ -222,7 +202,7 @@ class TrainingParser:
                 tpr_list.append(tpr)
                 auc_list.append(auc)
             else:
-                cv = KFold(n_splits=10,shuffle=True)
+                cv = model_selection.KFold(n_splits=10,shuffle=True)
                 tprs = []
                 aucs_val = []
                 # initialize a list to store the average fpr, tpr, and auc
@@ -245,19 +225,18 @@ class TrainingParser:
                     i += 1
 
                     # calculate mean true positive rate
-                tprs = np.array(tprs)
-                mean_tprs = tprs.mean(axis=0)
+                    tprs = np.array(tprs)
+                    mean_tprs = tprs.mean(axis=0)
 
-                # calculate mean auc
-                aucs_val = np.array(aucs_val)
-                mean_aucs = aucs_val.mean(axis=0)
+                    # calculate mean auc
+                    aucs_val = np.array(aucs_val)
+                    mean_aucs = aucs_val.mean(axis=0)
 
-                fpr_list.append(base_fpr)
-                tpr_list.append(mean_tprs)
-                auc_list.append(mean_aucs)
+                    fpr_list.append(base_fpr)
+                    tpr_list.append(mean_tprs)
+                    auc_list.append(mean_aucs)
 
         return fpr_list, tpr_list, auc_list
-
 
     def test_on_train(self,clfs,x_train,y_train):
         auc_total = 0
