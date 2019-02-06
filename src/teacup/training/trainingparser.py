@@ -169,11 +169,11 @@ class TrainingParser:
             tpr_all.append(tpr_list)
         return fpr_all,tpr_all,auc_all
 
-    def test_model(self,feature_type, testing_type="cv"):
+    def test_model(self, feature_type, testing_type="cv", outpath="roc.png"):
         """
-        model:
-            numeric: distance as it is
-            categorical: use one hot encoder
+        testing_type:
+            cv: cross validation
+            train: test on train
         """
 
         x_train = self.get_features(feature_type)
@@ -195,7 +195,7 @@ class TrainingParser:
         else:
             fpr_list, tpr_list, auc_list = self.test_on_train(clfs,x_train,y_train)
 
-        self.display_output(fpr_list, tpr_list, auc_list, list(clfs.keys()))
+        self.display_output(fpr_list, tpr_list, auc_list, list(clfs.keys()), path=outpath)
 
     def test_with_cv(self,clfs,x_train,y_train,fold=10):
         fpr_list = []
@@ -285,10 +285,12 @@ class TrainingParser:
         return fpr_list, tpr_list, auc_list
 
 
-    def display_output(self, fpr_list, tpr_list, auc_list, classifier_names):
+    def display_output(self, fpr_list, tpr_list, auc_list, classifier_names, path):
         """
             This plots the average ROC curve of all the classifiers in a single plot
         """
+        plt.clf() # first, clear the canvas
+
         plt.plot([0, 1], [0, 1], linestyle="--", color="red", alpha=0.1)
         for i in range(len(fpr_list)):
             plt.plot(fpr_list[i], tpr_list[i], lw=2, alpha=0.4, label='%s, AUC %f' % (classifier_names[i], auc_list[i]))
@@ -298,5 +300,4 @@ class TrainingParser:
         plt.ylabel('True Positive Rate')
         plt.title('Average ROC Curves for All Classifiers')
         plt.legend(loc="lower right")
-        plt.savefig('Avg_ROC.png')
-        plt.show()
+        plt.savefig(path)
