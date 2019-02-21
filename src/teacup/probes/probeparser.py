@@ -97,7 +97,7 @@ class ProbeParser:
 
     # ======== ANALYSIS FUNCTION ========
 
-    def get_seq(self,seqtype,indexes=[]):
+    def get_seq(self,seqtype,indexes=[],tofile=False):
         """
         Get sequence of type 'seqtype' and a list containing the desired indexes.
         By default indexes is an emtpy list as if it is empty, we return all
@@ -106,7 +106,15 @@ class ProbeParser:
         if not indexes:
             indexes = self.table[seqtype].index.values
         seqlist = self.table[seqtype]['Sequence'][indexes].tolist()
-        return {indexes[i]:seqlist[i] for i in range(len(seqlist))}
+        seqdict = {indexes[i]:seqlist[i] for i in range(len(seqlist))}
+        if not tofile:
+            return seqdict
+        else:
+            keys = sorted(seqdict.keys())
+            with open("sequences.txt",'w') as f:
+                for key in keys:
+                    f.write(">%s\n"%key)
+                    f.write("%s\n"%seqdict[key])
 
     def get_mutpos(self,indexes=[]):
         wt = self.table['wt']['Sequence']

@@ -12,8 +12,11 @@ from sklearn import svm
 from sklearn import linear_model
 from sklearn import naive_bayes
 from sklearn import model_selection
+from sklearn import preprocessing
+from matplotlib.backends.backend_pdf import PdfPages
 
 from teacup.training import simpleclassifier
+from teacup import utils
 
 def calculate_fpr_tpr(ytrue,ypred):
     if len(ytrue) != len(ypred):
@@ -38,70 +41,14 @@ def calculate_fpr_tpr(ytrue,ypred):
 
 class TrainingParser:
 
-    def __init__(self, trainingpath):
-        self.training = pd.read_csv(trainingpath)
+    def __init__(self, trainingdata,motiflen):
+        if type(trainingdata) == str: # input path
+            self.training = pd.read_csv(trainingdata)
+        elif type(trainingdata) == pd.core.frame.DataFrame: # from an existing data frame
+            self.training = trainingdata[['sequence', 'bpos1', 'bpos2', 'distance', 'label']]
+        self.motiflen = motiflen
 
-    # ======== Modifier to training data ========
-
-    def get_numeric_label(self):
-        train = self.training['label'].map({'cooperative': 1, 'additive': 0})
-        return train
-
-    # ======== Plot related ========
-
-    def scatter_boxplot_col(self, colname, filepath="scatterbox.png"):
-        groupdict = self.training.groupby(['label'])[colname].apply(list).to_dict()
-
-        keys = groupdict.keys()
-        listrep = [groupdict[key] for key in keys]
-
-        pos = np.linspace(1,1+len(listrep)*0.5-0.5,len(listrep))
-        bp = plt.boxplot(listrep,positions=pos,widths=0.4)
-        plt.xticks(pos, keys)
-        plt.setp(bp['boxes'], color='black')
-        plt.setp(bp['caps'], color='black')
-
-        for i in range(0,len(listrep)):
-            y = listrep[i]
-            x = np.random.normal(1+i*0.5, 0.02, size=len(y))
-            plt.plot(x, y, 'r.', alpha=0.4,c='red')
-
-        #print("Save distribution of row %s to %s" % (rownum,plotfilename))
-        plt.savefig(filepath,positions=[0, 1])
-        plt.clf() # clear canvas
-
-    # ======== Training and testing modelss ========
-
-    def extract_kmer_feature(self,seq):
-        nucleotides = ['A','C','G','T']
-        feature = []
-        for k in range(1,4):
-            perm = ["".join(p) for p in itertools.product(nucleotides, repeat=k)]
-            for i in range(len(seq)):
-                for kmer in perm:
-                    if seq[i:i+k] == kmer:
-                        feature.append(1)
-                    else:
-                        feature.append(0)
-        return np.asarray(feature)
-
-    def extract_kmer_features_bpos(self,seq,bpos1,bpos2):
-        span = 4
-        bpos = [bpos1 - 1, bpos2 - 1] # adjustment -1 for programming
-        nucleotides = ['A','C','G','T']
-
-        start = bpos1 - span
-        end = bpos2 + span + 1
-
-        feature = []
-        for pos in bpos:
-            if pos - span < 0:
-                start = 0
-            else:
-                start = pos - span
-            spanseq = seq[pos-span:pos+span+1]
-            feature.extend(self.extract_kmer_feature(spanseq))
-        return feature
+    # ===== Getter part ====
 
     def get_features(self,type="distance-numeric"):
         """
@@ -120,17 +67,31 @@ class TrainingParser:
             features = []
             for idx,row in self.training.iterrows():
                 rowfeature = self.extract_kmer_features_bpos(row["sequence"],row["bpos1"],row["bpos2"])
-                features.append(rowfeature) # + [row["distance"]]
+
+                linker = row["sequence"][row["bpos1"] + self.motiflen // 2 : row["bpos2"] - self.motiflen // 2]
+                ratio = self.extract_kmer_ratio(linker)
+
+                all = np.concatenate((rowfeature,ratio,[self.training['distance'][idx]]))
+                #features.append(preprocessing.normalize([all])[0])
+                features.append(all)
             return features
         elif type == "sites-linker":
             features = []
             for idx,row in self.training.iterrows():
+                numericdist = self.training["distance"].values.reshape((-1,1))
                 # since the binding pos is one index, we need to -1
-                midpos = row["bpos2"] - row["bpos1"] - 1
-                seq = row["sequence"][midpos-8:midpos+8]
-                features.append(self.extract_kmer_feature(seq))
+                midpos = (row["bpos2"] + row["bpos1"] - 1)//2
+                seq = row["sequence"][midpos-13:midpos+13]
+                features.append(self.extract_kmer_binary(seq) + [self.training['distance'][idx]])
             return features
 
+    # ======== Modifier to training data ========
+
+    def get_numeric_label(self):
+        train = self.training['label'].map({'cooperative': 1, 'additive': 0})
+        return train
+
+    # ======= For simple model that is based on distance only =======
     def roc_simple_clf(self,n_splits=1):
         # still numeric for now
         x_train = self.training["distance"].values
@@ -159,7 +120,6 @@ class TrainingParser:
                 fpr_list.append(fpr)
                 tpr_list.append(tpr)
 
-
             fpr_list.append(1)
             tpr_list.append(1)
 
@@ -169,41 +129,49 @@ class TrainingParser:
             tpr_all.append(tpr_list)
         return fpr_all,tpr_all,auc_all
 
-    def test_model(self, feature_type, testing_type="cv", outpath="roc.png"):
-        """
-        testing_type:
-            cv: cross validation
-            train: test on train
-        """
+    # ====== Processing part ======
 
-        x_train = self.get_features(feature_type)
-        y_train = self.get_numeric_label().values
-        #print(len(x_train),len(y_train))
-
+    def compare_distance_features(self, iter=10, fpr_lim=100):
         clfs = {
-                "decision tree":tree.DecisionTreeClassifier(),
-                "random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0),
-                "SVM":svm.SVC(kernel="rbf",gamma=1.0/5,probability=True),
-                #"log regression":linear_model.LogisticRegression(),
-                "simple":simpleclassifier.Simple1DClassifier(),
-                #"gradient boosting":ensemble.GradientBoostingClassifier(),
-                #"naive bayes":naive_bayes.GaussianNB()
-               }
+            #"decision tree":tree.DecisionTreeClassifier(),
+            "random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0),
+            #"SVM":svm.SVC(kernel="rbf",gamma=1.0/5,probability=True),
+            #"log regression":linear_model.LogisticRegression(),
+            "simple":simpleclassifier.Simple1DClassifier(),
+            #"gradient boosting":ensemble.GradientBoostingClassifier(),
+            #"naive bayes":naive_bayes.GaussianNB()
+           }
 
-        if testing_type == "cv":
-            fpr_list, tpr_list, auc_list = self.test_with_cv(clfs, x_train, y_train)
-        else:
-            fpr_list, tpr_list, auc_list = self.test_on_train(clfs,x_train,y_train)
+        dists = ["distance-numeric","distance-categorical"]
 
-        self.display_output(fpr_list, tpr_list, auc_list, list(clfs.keys()), path=outpath)
+        auc_dict = {}
+        fpr_dict = {}
+        tpr_dict = {}
+        for dist_type in dists:
+            auc_dict[dist_type] = []
+            for i in range(iter):
+                print("Processing using %s, iteration %d" % (dist_type,i+1))
+                x_train = self.get_features(dist_type)
+                y_train = self.get_numeric_label().values
+                fpr_list, tpr_list, auc_list = self.test_with_cv(clfs, x_train, y_train,fpr_lim=fpr_lim)
+                auc_dict[dist_type].append(auc_list['random forest'])
 
-    def test_with_cv(self,clfs,x_train,y_train,fold=10):
-        fpr_list = []
-        tpr_list = []
-        auc_list = []
+
+        print("Making scatter boxplot for each feature...")
+        utils.scatter_boxplot_dict(auc_dict,ylabel="AUC")
+
+        print("Two sided wilcox test, pval: %.4f" % utils.wilcox_test(auc_dict["distance-numeric"],auc_dict["distance-categorical"]))
+        print("Numeric > Categorical test, pval: %.4f" % utils.wilcox_test(auc_dict["distance-numeric"],auc_dict["distance-categorical"],alternative="greater"))
+        print("Numeric < Categorical test, pval: %.4f" % utils.wilcox_test(auc_dict["distance-numeric"],auc_dict["distance-categorical"],alternative="less"))
+
+    def test_with_cv(self,clfs,x_train,y_train,fold=10,fpr_lim=100):
+        fpr_dict = {}
+        tpr_dict = {}
+        auc_dict = {}
          # Compute ROC curve and ROC area with averaging for each classifier
         for key in clfs:
-            base_fpr = np.linspace(0, 1, 101)
+            # we limit this to get roc curve / auc until the fpr that we want
+            base_fpr = np.linspace(0, 1, 101)[:fpr_lim+1]
             tprs = []
             aucs_val = []
             if key == "simple":
@@ -227,14 +195,11 @@ class TrainingParser:
                     model = clfs[key].fit(data_train, lbl_train)
                     y_score = model.predict_proba(data_test)
                     fpr, tpr, _ = metrics.roc_curve(lbl_test, y_score[:, 1])
-                    auc = metrics.roc_auc_score(lbl_test, y_score[:,1])
-                    print("fold " + str(i) + " AUC: " + str(auc))
-                    # vmartin: please have the package name instead of using
-                    # the function directly so we know where does the function
-                    # come from :)
+                    #auc = metrics.roc_auc_score(lbl_test, y_score[:,1])
                     tpr = scipy.interp(base_fpr, fpr, tpr)
+                    res_auc = metrics.auc(base_fpr, tpr)
                     tprs.append(tpr)
-                    aucs_val.append(auc)
+                    aucs_val.append(res_auc)
                     i += 1
 
             # calculate mean true positive rate
@@ -245,55 +210,23 @@ class TrainingParser:
             aucs_val = np.array(aucs_val)
             mean_aucs = aucs_val.mean(axis=0)
 
-            fpr_list.append(base_fpr)
-            tpr_list.append(mean_tprs)
-            auc_list.append(mean_aucs)
+            fpr_dict[key] = base_fpr
+            tpr_dict[key] = mean_tprs
+            auc_dict[key] = mean_aucs
 
-        return fpr_list, tpr_list, auc_list
+        return fpr_dict, tpr_dict, auc_dict
 
-    def test_on_train(self,clfs,x_train,y_train):
-        auc_total = 0
-        fpr_list = []
-        tpr_list = []
-        auc_list = []
-        for key in clfs:
-            if key == "simple":
-                fpr,tpr,auc = self.roc_simple_clf()
-                fpr = fpr[0]
-                tpr = tpr[0]
-                auc = auc[0]
-                #plt.plot(fpr,tpr,label="distance threshold, training auc=%f" % auc,linestyle=":", color="orange")
-            else:
-                print("key is:", key)
-                clf = clfs[key].fit(x_train, y_train)
-                y_pred = clf.predict_proba(x_train)[:, 1]
+    # ========= Plotting =======
 
-                # https://stackoverflow.com/questions/25009284/how-to-plot-roc-curve-in-python
-                # print("Accuracy %s: %f" % (key,metrics.accuracy_score(y_train, y_pred)))
-
-                # ROC curve
-                fpr, tpr, _ = metrics.roc_curve(y_train, y_pred)
-                auc = metrics.roc_auc_score(y_train, y_pred)
-                #plt.plot(fpr,tpr,label="%s, training auc=%f" % (key,auc))
-
-            fpr_list.append(fpr)
-            tpr_list.append(tpr)
-            auc_list.append(auc)
-            auc_total += auc
-        print("Average AUC %f"%(auc_total/len(clfs)))
-
-        return fpr_list, tpr_list, auc_list
-
-
-    def display_output(self, fpr_list, tpr_list, auc_list, classifier_names, path):
+    def display_output(self, fpr_dict, tpr_dict, auc_dict, path):
         """
             This plots the average ROC curve of all the classifiers in a single plot
         """
         plt.clf() # first, clear the canvas
 
         plt.plot([0, 1], [0, 1], linestyle="--", color="red", alpha=0.1)
-        for i in range(len(fpr_list)):
-            plt.plot(fpr_list[i], tpr_list[i], lw=2, alpha=0.4, label='%s, AUC %f' % (classifier_names[i], auc_list[i]))
+        for key in fpr_dict:
+            plt.plot(fpr_dict[key], tpr_dict[key], lw=2, alpha=0.4, label='%s, AUC %f' % (key, auc_dict[key]))
 
         # Show the ROC curves for all classifiers on the same plot
         plt.xlabel('False Positive Rate')

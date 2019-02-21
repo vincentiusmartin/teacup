@@ -97,7 +97,7 @@ class SitesFinder:
                 escoresites = self.get_binding_escore(seq)
                 y_escore = [x["score"] * 10 for x in escoresites]
                 x_escore = [x["position"] for x in escoresites]
-                ax.plot(x_escore,y_escore,linewidth=2.5,color="darkorange")
+                ax.plot(x_escore, y_escore, linewidth=2.5, color="darkorange")
 
                 # ================ MUTATION POSITION PLOTTING ================
                 mutpos = probes.get_mutpos(indexes)

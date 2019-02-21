@@ -205,3 +205,5 @@ Boxplot from distance::
 Output:
 
 .. image:: images/distance_scatterbox.png
+
+Filter training data:
