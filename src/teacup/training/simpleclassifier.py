@@ -39,7 +39,7 @@ class Simple1DClassifier:
         label_gt, label_lt, threshold = self.label_from_dist(x_train,y_train,threshold)
         self.update_params(label_gt, label_lt, threshold)
 
-    def fit_best_thres(self,x_train,y_train,threslist):
+    def fit_best_thres(self, x_train, y_train, threslist):
         best_thres = -1
         best_acc = -1
         best_lgt = -1
