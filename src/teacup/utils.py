@@ -21,11 +21,14 @@ def one_index_df(df):
     df.index = np.arange(1, len(df) + 1)
     return df
 
-def dictlist2file(inputdict,filepath):
+def dictlist2file(inputdict,filepath,listval=False):
     with open(filepath,'w') as f:
         for key in inputdict:
             f.write(">%s\n"%key)
-            f.write(",".join(str(x) for x in inputdict[key]) + "\n")
+            if listval:
+                f.write(",".join(str(x) for x in inputdict[key]) + "\n")
+            else:
+                f.write(inputdict[key] + "\n")
 
 def read_dictlist_file(filepath):
     try:

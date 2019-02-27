@@ -50,6 +50,46 @@ class TrainingParser:
 
     # ===== Getter part ====
 
+    def get_labels_indexes(self):
+        return self.training.groupby("label").groups
+
+    def get_bsites(self):
+        sitedict = {}
+        bpos1 = self.training["bpos1"].to_dict()
+        bpos2 = self.training["bpos2"].to_dict()
+        return bpos1,bpos2
+
+    def get_seq(self,tofile=False):
+        seqdict = self.training["sequence"].to_dict()
+        if not tofile:
+            return seqdict
+        else:
+            keys = sorted(seqdict.keys())
+            with open("sequences.txt",'w') as f:
+                for key in keys:
+                    f.write(">%s\n"%key)
+                    f.write("%s\n"%seqdict[key])
+
+    def get_seq_aligned(self,tofile=False):
+        min_dist = self.training.min()["bpos1"]
+        max_dist = self.training.max()["bpos1"]
+        trimlen = len(self.training.iloc[0]["sequence"]) - (max_dist - min_dist)
+
+        align_dict = {}
+        pr = True
+        for idx,row in self.training.iterrows():
+            lshift = row["bpos1"] - min_dist
+            if pr:
+                print("Binding pos location, b1: %d, b2: %d" % (min_dist,row["bpos2"]-lshift))
+                pr = False
+            aligned = row["sequence"][lshift:]
+            trimmed = row["sequence"][:trimlen]
+            align_dict[idx] = trimmed
+        if not tofile:
+            return align_dict
+        else:
+            return utils.dictlist2file(align_dict,"sequence.txt")
+
     def get_features(self,type="distance-numeric"):
         """
         type:

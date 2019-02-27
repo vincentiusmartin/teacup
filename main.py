@@ -1,11 +1,12 @@
 import sys
 sys.path.insert(0, 'src')
 
-from teacup import probeparser
-from teacup import classifier
 from teacup import utils
-from teacup import sitesfinder
-from teacup import trainingparser
+from teacup.probes import probeparser
+from teacup.probes import classifier
+from teacup.probes import sitesfinder
+from teacup.training import trainingparser
+from teacup.training import dnashape
 
 if __name__=="__main__":
     infile = "data/dataset/all_Myc_Mad_2nd_myc_log_bound2.txt"
@@ -16,6 +17,5 @@ if __name__=="__main__":
     logsetting= True
     pvalthres = .05
 
-    train = trainingparser.TrainingParser(trainingpath)
-    #train.auc_simple_clf()
-    #train.test_model("sites-centered")
+    train = trainingparser.TrainingParser(trainingpath,motiflen=6)
+    train.compare_distance_features(iter=100,fpr_lim=20)
