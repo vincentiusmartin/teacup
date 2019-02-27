@@ -76,14 +76,6 @@ if __name__=="__main__":
     comb_name = []
     prefix = ["one_hot", "1mer", "2mer"]
 
-    # x,y = prepare_data(DATA_PATH, ['one_hot'])
-    # comb_name.append(['one_hot'])
-    # auc_list = []
-    # for i in range(10):
-    #     auc_res = train(x,y)
-    #     auc_list.append(auc_res)
-    # output.append(auc_list)
-    # print(output)
     # get every feature combination
     for i in range(3):
         print(i)
@@ -91,7 +83,7 @@ if __name__=="__main__":
             print(comb)
             x, y = prepare_data(DATA_PATH, comb)
             comb_name.append(comb)
-            # run 100 times
+            # run 10 times
             auc_list = []
             for j in range(10):
                 auc_res = train(x, y)
