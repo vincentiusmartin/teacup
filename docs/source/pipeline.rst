@@ -206,4 +206,17 @@ Output:
 
 .. image:: images/distance_scatterbox.png
 
-Filter training data:
+Filter training data
+==================================
+
+Getting only sequence of specific distances::
+
+    # first make training parser from everything
+    train = trainingparser.TrainingParser(trainingpath,motiflen=6)
+    # then we make a data frame with only the distance that we want, let's say 15
+    t2 = train.training.loc[train.training['distance'] == 15]
+    # make training parser with the new data frame, it accepts both path
+    # and data frame
+    train2 = trainingparser.TrainingParser(t2,motiflen=6)
+    # then write the sequences of that distance into a file
+    train2.get_seq_aligned(tofile=True)
