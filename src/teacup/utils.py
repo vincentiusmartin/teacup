@@ -9,6 +9,8 @@ wilcox = robjects.r['wilcox.test']
 numeric = robjects.r['as.numeric']
 
 def wilcox_test(arr1,arr2,alternative='two.sided'):
+    arr1 = [float(x) for x in arr1]
+    arr2 = [float(x) for x in arr2]
     narr1 = numeric(arr1)
     narr2 = numeric(arr2)
     #print(wilcox(narr1,narr2,alternative=wilcox_alternative))
