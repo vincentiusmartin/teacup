@@ -91,5 +91,3 @@ if __name__=="__main__":
             output.append(auc_list)
 
     display_output(output, comb_name)
-
-

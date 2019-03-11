@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import itertools
 import scipy
+import subprocess
 
 from sklearn import tree
 from sklearn import metrics
@@ -13,7 +14,6 @@ from sklearn import linear_model
 from sklearn import naive_bayes
 from sklearn import model_selection
 from sklearn import preprocessing
-from matplotlib.backends.backend_pdf import PdfPages
 
 from teacup.training import simpleclassifier
 from teacup import utils
@@ -90,40 +90,117 @@ class TrainingParser:
         else:
             return utils.dictlist2file(align_dict,"sequence.txt")
 
-    def get_features(self,type="distance-numeric"):
+    # ========= test model =========
+    def test_model(self, feature_type, testing_type="cv", outpath="roc.png"):
+        """
+        testing_type:
+            cv: cross validation
+            train: test on train
+            Produce AUC
+        """
+
+        x_train = self.get_features(feature_type)
+        y_train = self.get_numeric_label().values
+        #print(len(x_train),len(y_train))
+
+        clfs = {
+                #"decision tree":tree.DecisionTreeClassifier(),
+                #"random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0),
+                #"SVM":svm.SVC(kernel="rbf",gamma=1.0/5,probability=True),
+                #"log regression":linear_model.LogisticRegression(),
+                "simple":simpleclassifier.Simple1DClassifier(),
+                #"gradient boosting":ensemble.GradientBoostingClassifier(),
+                #"naive bayes":naive_bayes.GaussianNB()
+               }
+
+        if testing_type == "cv":
+            fpr_list, tpr_list, auc_list = self.test_with_cv(clfs, x_train, y_train)
+        else:
+            fpr_list, tpr_list, auc_list = self.test_on_train(clfs,x_train,y_train)
+
+        self.display_output(fpr_list, tpr_list, auc_list, path=outpath)
+
+# ========= Visualization =========
+
+    def visualize_random_forest(self, types):
+        rf = ensemble.RandomForestClassifier(n_estimators=10, max_depth=2,random_state=0)
+        # print trees
+        # feature importance
+        x_df = self.get_features(types,ret_tbl=True)
+        x_train = x_df.values.tolist()
+
+        y_train = self.get_numeric_label().values
+        rf.fit(x_train,y_train)
+
+        # draw a tree from the forest, let's say tree 5
+        estimator = rf.estimators_[5]
+        tree.export_graphviz(estimator, out_file='tree.dot',
+                feature_names = x_df.columns,
+                class_names = ['additive','cooperative'],
+                rounded = True, proportion = False,
+                precision = 2, filled = True)
+        subprocess.call(['dot', '-Tpng', 'tree.dot', '-o', 'tree.png', '-Gdpi=600'])
+
+        # do feature importance, code is taken from Farica
+        feature_importances = pd.DataFrame(rf.feature_importances_,
+                                           index = x_df.columns,
+                                            columns=['importance']).sort_values('importance',ascending=False)
+        print(feature_importances)
+
+
+    def get_features(self, types, ret_tbl=False):
         """
         type:
-            distance-numeric
-            distance-categorical
-            sites-centered
-            linker
+            dist-numeric
+            dist-categorical
+            linker_[k]mer
+            positional_in_[x]_out_[y]
+        ret_tbl:
+            False: return a list of list
+            True: return a list of dictionary--this can be directly converted
+                  into a data frame.
         """
-        if type == "distance-numeric":
-            return self.training["distance"].values.reshape((-1,1))
-        elif type == "distance-categorical":
-            one_hot = pd.get_dummies(self.training['distance'])
-            return  one_hot.values.tolist()
-        elif type == "sites-centered":
-            features = []
-            for idx,row in self.training.iterrows():
-                rowfeature = self.extract_kmer_features_bpos(row["sequence"],row["bpos1"],row["bpos2"])
+        if not (isinstance(types, list) or isinstance(types, tuple)):
+            print("Error: Input types must be a list or a tuple!")
+            return []
 
-                linker = row["sequence"][row["bpos1"] + self.motiflen // 2 : row["bpos2"] - self.motiflen // 2]
-                ratio = self.extract_kmer_ratio(linker)
+        features = []
+        for feature_type in types:
+            if feature_type == "dist-numeric":
+                # (self.training["distance"].values.reshape((-1,1)))
+                rfeature = [{"dist-numeric":x} for x in self.training["distance"].values]
+            elif feature_type == "dist-categorical":
+                one_hot = pd.get_dummies(self.training['distance'])
+                one_hot.columns = ["dist-num-%d"%col for col in one_hot.columns]
+                #features.append(one_hot.values.tolist())
+                rfeature = one_hot.to_dict('records')
+            elif feature_type.startswith("linker"):
+                rfeature = []
+                for idx,row in self.training.iterrows():
+                    start = row["bpos1"] + self.motiflen // 2
+                    end = row["bpos2"] - self.motiflen // 2
+                    linker = row["sequence"][start:end]
+                    k = int(feature_type[len("linker_") : feature_type.find("mer")])
+                    ratio = utils.extract_kmer_ratio(linker,k)
+                    rfeature.append(ratio)
+                    #ratio_feature = [x[1] for x in sorted(ratio.items(), key=lambda k:k[0])]
+                    #rowfeatures.append(ratio_feature)
+            elif feature_type.startswith("positional"):
+                splitted = feature_type.split("_")
+                s_in = int(splitted[2])
+                s_out = int(splitted[4])
+                rfeature = []
+                for idx,row in self.training.iterrows():
+                    pos_feature = utils.extract_positional_features(row["sequence"], row["bpos1"], row["bpos2"],
+                                 span_out=s_out, span_in=s_in)
+                    rfeature.append(pos_feature)
+            features = utils.merge_listdict(features,rfeature)
 
-                all = np.concatenate((rowfeature,ratio,[self.training['distance'][idx]]))
-                #features.append(preprocessing.normalize([all])[0])
-                features.append(all)
-            return features
-        elif type == "sites-linker":
-            features = []
-            for idx,row in self.training.iterrows():
-                numericdist = self.training["distance"].values.reshape((-1,1))
-                # since the binding pos is one index, we need to -1
-                midpos = (row["bpos2"] + row["bpos1"] - 1)//2
-                seq = row["sequence"][midpos-13:midpos+13]
-                features.append(self.extract_kmer_binary(seq) + [self.training['distance'][idx]])
-            return features
+        df_features = pd.DataFrame(features)
+        if ret_tbl:
+            return df_features
+        else:
+            return df_features.values.tolist()
 
     # ======== Modifier to training data ========
 
@@ -182,27 +259,81 @@ class TrainingParser:
             #"naive bayes":naive_bayes.GaussianNB()
            }
 
-        dists = ["distance-numeric","distance-categorical"]
+        dists = [["dist-numeric"],["dist-categorical"]]
 
         auc_dict = {}
-        fpr_dict = {}
-        tpr_dict = {}
         for dist_type in dists:
-            auc_dict[dist_type] = []
+            dname = dist_type[0]
+            auc_dict[dname] = []
             for i in range(iter):
                 print("Processing using %s, iteration %d" % (dist_type,i+1))
                 x_train = self.get_features(dist_type)
                 y_train = self.get_numeric_label().values
                 fpr_list, tpr_list, auc_list = self.test_with_cv(clfs, x_train, y_train,fpr_lim=fpr_lim)
-                auc_dict[dist_type].append(auc_list['random forest'])
+                auc_dict[dname].append(auc_list['random forest'])
 
 
         print("Making scatter boxplot for each feature...")
         utils.scatter_boxplot_dict(auc_dict,ylabel="AUC")
 
-        print("Two sided wilcox test, pval: %.4f" % utils.wilcox_test(auc_dict["distance-numeric"],auc_dict["distance-categorical"]))
-        print("Numeric > Categorical test, pval: %.4f" % utils.wilcox_test(auc_dict["distance-numeric"],auc_dict["distance-categorical"],alternative="greater"))
-        print("Numeric < Categorical test, pval: %.4f" % utils.wilcox_test(auc_dict["distance-numeric"],auc_dict["distance-categorical"],alternative="less"))
+        print("Two sided wilcox test, pval: %.4f" % utils.wilcox_test(auc_dict["dist-numeric"],auc_dict["dist-categorical"]))
+        print("Numeric > Categorical test, pval: %.4f" % utils.wilcox_test(auc_dict["dist-numeric"],auc_dict["dist-categorical"],alternative="greater"))
+        print("Numeric < Categorical test, pval: %.4f" % utils.wilcox_test(auc_dict["dist-numeric"],auc_dict["dist-categorical"],alternative="less"))
+
+    def compare_dist_pos_features(self, iter=10, fpr_lim=100, path="dist_positional.pdf"):
+        clfs = {
+            "random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0)
+        }
+        y_train = self.get_numeric_label().values
+
+        span_out_list = [0,1,2,3]
+        span_in_list = [0,1,2,3,4,5,6,7,8]
+        #spans = list(itertools.product(span_in_list, span_out_list))
+
+        auc_all = []
+        for so in span_out_list:
+            auc_dict = {}
+            for si in span_in_list:
+                type = "positional_in_%d_out_%d" % (si,so)
+                print(type)
+                features = [type,"dist-numeric"]
+                x_train = self.get_features(features)
+                fea_name = ",".join(features)
+                auc_dict[fea_name] = []
+                for i in range(iter):
+                    fpr_list, tpr_list, auc_list = self.test_with_cv(clfs, x_train, y_train,fpr_lim=fpr_lim)
+                    auc_dict[fea_name].append(auc_list['random forest'])
+            auc_all.append(auc_dict)
+            #x_train = self.get_features([])
+        utils.multiple_scatter_boxplots(auc_all,ylabel="AUC",filepath=path)
+
+
+    def compare_dist_linker_features(self, iter=10, fpr_lim=100,path="linker.png"):
+        prefix = ["dist-numeric", "linker_1mer", "linker_2mer"]
+        y_train = self.get_numeric_label().values
+
+        clfs = {
+            "random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0)
+        }
+
+        auc_dict = {}
+        for i in range(2):
+            for comb in itertools.combinations(prefix, i+1):
+                comb_name = ", ".join(comb)
+                auc_dict[comb_name] = []
+                for i in range(iter):
+                    print("Processing using %s, iteration %d" % (str(comb_name),i+1))
+                    x_train = self.get_features(comb)
+                    fpr_list, tpr_list, auc_list = self.test_with_cv(clfs, x_train, y_train,fpr_lim=fpr_lim)
+                    auc_dict[comb_name].append(auc_list['random forest'])
+        utils.scatter_boxplot_dict(auc_dict,ylabel="AUC",filepath=path)
+
+        keys = auc_dict.keys()
+        for comb in itertools.combinations(keys, 2):
+            print("Two sided wilcox test, pval: %.4f" % utils.wilcox_test(auc_dict[comb[0]], auc_dict[comb[1]]))
+            print("%s > %s test, pval: %.4f" % (comb[0],comb[1],utils.wilcox_test(auc_dict[comb[0]], auc_dict[comb[1]], alternative="greater")) )
+            print("%s > %s test, pval: %.4f" % (comb[1],comb[0],utils.wilcox_test(auc_dict[comb[0]], auc_dict[comb[1]], alternative="less")) )
+            print("---------------------")
 
     def test_with_cv(self,clfs,x_train,y_train,fold=10,fpr_lim=100):
         fpr_dict = {}
@@ -256,7 +387,41 @@ class TrainingParser:
 
         return fpr_dict, tpr_dict, auc_dict
 
-    # ========= Plotting =======
+    def test_on_train(self,clfs,x_train,y_train):
+        auc_total = 0
+        fpr_list = []
+        tpr_list = []
+        auc_list = []
+        for key in clfs:
+            if key == "simple":
+                fpr,tpr,auc = self.roc_simple_clf()
+                fpr = fpr[0]
+                tpr = tpr[0]
+                auc = auc[0]
+                #plt.plot(fpr,tpr,label="distance threshold, training auc=%f" % auc,linestyle=":", color="orange")
+            else:
+                print("key is:", key)
+                clf = clfs[key].fit(x_train, y_train)
+                y_pred = clf.predict_proba(x_train)[:, 1]
+
+                # https://stackoverflow.com/questions/25009284/how-to-plot-roc-curve-in-python
+                # print("Accuracy %s: %f" % (key,metrics.accuracy_score(y_train, y_pred)))
+
+                # ROC curve
+                fpr, tpr, _ = metrics.roc_curve(y_train, y_pred)
+                auc = metrics.roc_auc_score(y_train, y_pred)
+                #plt.plot(fpr,tpr,label="%s, training auc=%f" % (key,auc))
+
+            fpr_list.append(fpr)
+            tpr_list.append(tpr)
+            auc_list.append(auc)
+            auc_total += auc
+        print("Average AUC %f"%(auc_total/len(clfs)))
+
+        return fpr_list, tpr_list, auc_list
+
+
+    # ========= Plotting =========
 
     def display_output(self, fpr_dict, tpr_dict, auc_dict, path):
         """

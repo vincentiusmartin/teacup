@@ -209,12 +209,17 @@ probes:</p>
 </div>
 <div class="section" id="filter-training-data">
 <h2>Filter training data<a class="headerlink" href="#filter-training-data" title="Permalink to this headline">¶</a></h2>
+<p>Compare distance features only:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">trainingpath</span> <span class="o">=</span> <span class="s2">&quot;data/generated/training.csv&quot;</span>
+<span class="n">train</span> <span class="o">=</span> <span class="n">trainingparser</span><span class="o">.</span><span class="n">TrainingParser</span><span class="p">(</span><span class="n">trainingpath</span><span class="p">,</span><span class="n">motiflen</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">train</span><span class="o">.</span><span class="n">compare_distance_features</span><span class="p">(</span><span class="nb">iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">fpr_lim</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>Getting only sequence of specific distances:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># first make training parser from everything</span>
 <span class="n">train</span> <span class="o">=</span> <span class="n">trainingparser</span><span class="o">.</span><span class="n">TrainingParser</span><span class="p">(</span><span class="n">trainingpath</span><span class="p">,</span><span class="n">motiflen</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
-<span class="n">train</span><span class="o">.</span><span class="n">compare_distance_features</span><span class="p">(</span><span class="nb">iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">fpr_lim</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-<span class="c1"># then we make a data frame with only the distance that we want</span>
-<span class="n">t2</span> <span class="o">=</span> <span class="n">train</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">train</span><span class="o">.</span><span class="n">training</span><span class="p">[</span><span class="s1">&#39;distance&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">11</span><span class="p">]</span>
+<span class="c1"># then we make a data frame with only the distance that we want, let&#39;s say 15</span>
+<span class="n">t2</span> <span class="o">=</span> <span class="n">train</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">train</span><span class="o">.</span><span class="n">training</span><span class="p">[</span><span class="s1">&#39;distance&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">15</span><span class="p">]</span>
 <span class="c1"># make training parser with the new data frame, it accepts both path</span>
 <span class="c1"># and data frame</span>
 <span class="n">train2</span> <span class="o">=</span> <span class="n">trainingparser</span><span class="o">.</span><span class="n">TrainingParser</span><span class="p">(</span><span class="n">t2</span><span class="p">,</span><span class="n">motiflen</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>

@@ -5,6 +5,7 @@ import os
 from matplotlib.backends.backend_pdf import PdfPages
 
 from teacup import utils
+from teacup.training import trainingparser
 
 class DNAShape:
 
@@ -23,14 +24,14 @@ class DNAShape:
                 elif file_extension == ".HelT":
                     self.helt = utils.read_dictlist_file(path)
 
-    def plot_average(self, labels, pthres=0.05, path="", mark=[]):
+    def plot_average(self, labels, pthres=0.05, mark=[], path=".", plotlabel="Average DNA shape"):
         plt.clf()
-        maxlen = 0
         colors = ['orangered','dodgerblue','lime']
 
         shapes = {"Propeller twist ":self.prot,"Helix twist":self.helt,"Roll":self.roll,"Minor Groove Width":self.mgw}
+        #shapes = {"Propeller twist ":self.prot}
+        keystolabel = {"additive":"ã","cooperative":"ç"}
 
-        yall = []
         fig = plt.figure(figsize=(12,12))
         #with PdfPages("shape.pdf") as pdf:
         n = 0
@@ -38,13 +39,18 @@ class DNAShape:
             c = 0
             n += 1
             ax = fig.add_subplot(2,2,n)
+            yall = {}
+
+            # ==== Plotting part using 25, 50, and 75 percentiles ====
+            # labels = cooperative or additive
+            keys = []
             for label in labels:
                 indexes = labels[label]
                 curlist = np.array([shapes[sh][str(key)] for key in indexes])
-                yall.append(curlist)
+                keys.append(label) # for marking significance
+                yall[label] = curlist
 
                 seqlen = len(curlist[0])
-                maxlen = seqlen
                 if not all(len(l) == seqlen for l in curlist):
                     raise ValueError('not all lists have same length!')
 
@@ -56,28 +62,55 @@ class DNAShape:
                 ax.fill_between(xlist, y75p, y25p, alpha=0.15, facecolor=colors[c])
                 c += 1
 
-            signiflist = []
-            for i in range(0,maxlen):
+            # ==== Hypothesis testing to mark significant binding sites ====
+            signiflabel = []
+            for i in range(0,seqlen):
                 # for now assume yall is of size 2
-                arr1 = [seq[i] for seq in yall[0]]
-                arr2 = [seq[i] for seq in yall[1]]
-                if not (all(np.isnan(x) for x in arr1) and all(np.isnan(x) for x in arr2)):
-                    p1 = utils.wilcox_test(arr1,arr2,"greater")
-                    p2 = utils.wilcox_test(arr1,arr2,"less")
-                    if p1 <= pthres or p2 <= pthres:
-                        signiflist.append(i+1)
+                arr_coop = [seq[i] for seq in yall['cooperative']]
+                arr_add = [seq[i] for seq in yall['additive']]
+                if not (all(np.isnan(x) for x in arr_coop) and all(np.isnan(x) for x in arr_add)):
+                    p1 = utils.wilcox_test(arr_coop,arr_add,"greater")
+                    p2 = utils.wilcox_test(arr_coop,arr_add,"less")
+                    if p1 <= pthres:
+                        signiflabel.append(keystolabel["cooperative"])
+                    elif p2 <= pthres:
+                        signiflabel.append(keystolabel["additive"])
+                    else:
+                        signiflabel.append('')
+                else:
+                    signiflabel.append('')
 
+            # ==== Mark binding sites as given from the input ====
             for m in mark:
                 ax.axvline(x=m,linewidth=1, color='g',linestyle='--')
 
-            ax.set_xlim(1,maxlen)
-            xi = [x for x in range(1,maxlen)]
-            label = ['' if x not in signiflist else '*' for x in xi]
+            ax.set_xlim(1,seqlen)
+            xi = [x for x in range(1,seqlen+1)]
+            #label = ['' if x not in signiflist else '*' for x in xi]
             ax.set_xticks(xi)
-            ax.set_xticklabels(label)
+            ax.set_xticklabels(signiflabel)
             ax.yaxis.set_label_text(sh)
             ax.xaxis.set_label_text('Sequence position')
             ax.legend(loc="upper right")
+            ax.set_title(plotlabel)
 
-        with PdfPages("shape-p=%.2f.pdf"%pthres) as pdf:
+        with PdfPages(path) as pdf:
             pdf.savefig(fig)
+
+def plot_average_all(trainingpath,shapepath,distances):
+    for dist in distances:
+        print("Plotting for dist %d" % dist)
+        dist_path = "%s/d%s" % (shapepath,dist)
+        bpos_file = "%s/bindingpos.txt" % dist_path
+        with open(bpos_file,'r') as f:
+            bpos = f.read().strip().split(",")
+            bpos = [int(x) for x in bpos]
+        train = trainingparser.TrainingParser(trainingpath,motiflen=6)
+        # make a new data frame with only the distance on each iteration
+        t2 = train.training.loc[train.training['distance'] == dist]
+        train2 = trainingparser.TrainingParser(t2,motiflen=6)
+        li = train2.get_labels_indexes()
+        shape = DNAShape(dist_path)
+        for p in [0.05,0.1]:
+            plot_path = "%s/shape-p=%.2f.pdf"%(dist_path,p)
+            shape.plot_average(li,pthres=p,mark=bpos,path=plot_path,plotlabel="Average DNA shape for d=%d,p=%.2f" % (dist,p))

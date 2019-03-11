@@ -209,6 +209,12 @@ Output:
 Filter training data
 ==================================
 
+Compare distance features only::
+
+    trainingpath = "data/generated/training.csv"
+    train = trainingparser.TrainingParser(trainingpath,motiflen=6)
+    train.compare_distance_features(iter=100, fpr_lim=20)
+
 Getting only sequence of specific distances::
 
     # first make training parser from everything
