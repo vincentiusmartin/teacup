@@ -91,7 +91,7 @@ class TrainingParser:
             return utils.dictlist2file(align_dict,"sequence.txt")
 
     # ========= test model =========
-    def test_model(self, feature_type, testing_type="cv", outpath="roc.png"):
+    def test_model(self, feature_list, testing_type="cv", outpath="roc.png"):
         """
         testing_type:
             cv: cross validation
@@ -99,13 +99,13 @@ class TrainingParser:
             Produce AUC
         """
 
-        x_train = self.get_features(feature_type)
+        x_train = self.get_features(feature_list)
         y_train = self.get_numeric_label().values
         #print(len(x_train),len(y_train))
 
         clfs = {
                 #"decision tree":tree.DecisionTreeClassifier(),
-                #"random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0),
+                "random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0),
                 #"SVM":svm.SVC(kernel="rbf",gamma=1.0/5,probability=True),
                 #"log regression":linear_model.LogisticRegression(),
                 "simple":simpleclassifier.Simple1DClassifier(),
@@ -141,7 +141,7 @@ class TrainingParser:
                 precision = 2, filled = True)
         subprocess.call(['dot', '-Tpng', 'tree.dot', '-o', 'tree.png', '-Gdpi=600'])
 
-        # do feature importance, code is taken from Farica
+        # do feature importance, code is taken from Farica's
         feature_importances = pd.DataFrame(rf.feature_importances_,
                                            index = x_df.columns,
                                             columns=['importance']).sort_values('importance',ascending=False)

@@ -17,6 +17,7 @@
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="code" href="code.html" />
     <link rel="prev" title="Teacup’s documentation" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -187,7 +188,7 @@ probes:</p>
 </pre></div>
 </div>
 <p>To make filter and make the training data:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="go">&gt;&gt;&gt;sf.filtertrain_to_csv(probes,classification,filename=&quot;training.csv&quot;)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sf</span><span class="o">.</span><span class="n">filtertrain_to_csv</span><span class="p">(</span><span class="n">probes</span><span class="p">,</span><span class="n">classification</span><span class="p">,</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;training.csv&quot;</span><span class="p">)</span>
 <span class="go">Number filtered cooperative 113</span>
 <span class="go">Number filtered additive 199</span>
 </pre></div>
@@ -209,22 +210,58 @@ probes:</p>
 </div>
 <div class="section" id="filter-training-data">
 <h2>Filter training data<a class="headerlink" href="#filter-training-data" title="Permalink to this headline">¶</a></h2>
+<p>To do processing on training data, <cite>trainingparser</cite> should be used. First,
+import:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;src&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">teacup.training</span> <span class="k">import</span> <span class="n">trainingparser</span>
+</pre></div>
+</div>
+<p>To initialize:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># path to the training file (currently obtained from Myc)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trainingpath</span> <span class="o">=</span> <span class="s2">&quot;data/generated/training.csv&quot;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># make the training object. currently this requires the path and the</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># length of the motif, for Myc, it is 6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tp</span> <span class="o">=</span> <span class="n">trainingparser</span><span class="o">.</span><span class="n">TrainingParser</span><span class="p">(</span><span class="n">trainingpath</span><span class="p">,</span><span class="n">motiflen</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Test all models (still hardcoded inside… currently this is not really used but
+we can fix later if needed):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">test_model</span><span class="p">([</span><span class="s2">&quot;dist-numeric&quot;</span><span class="p">,</span><span class="s2">&quot;linker_2mer&quot;</span><span class="p">],</span> <span class="n">testing_type</span><span class="o">=</span><span class="s2">&quot;cv&quot;</span><span class="p">,</span> <span class="n">outpath</span><span class="o">=</span><span class="s2">&quot;roc.png&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>Compare distance features only:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">trainingpath</span> <span class="o">=</span> <span class="s2">&quot;data/generated/training.csv&quot;</span>
-<span class="n">train</span> <span class="o">=</span> <span class="n">trainingparser</span><span class="o">.</span><span class="n">TrainingParser</span><span class="p">(</span><span class="n">trainingpath</span><span class="p">,</span><span class="n">motiflen</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
-<span class="n">train</span><span class="o">.</span><span class="n">compare_distance_features</span><span class="p">(</span><span class="nb">iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">fpr_lim</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># compare distance</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tp</span><span class="o">.</span><span class="n">compare_distance_features</span><span class="p">(</span><span class="nb">iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">fpr_lim</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Compare linker features:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tp</span><span class="o">.</span><span class="n">compare_dist_linker_features</span><span class="p">(</span><span class="nb">iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">fpr_lim</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Compare positional features:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tp</span><span class="o">.</span><span class="n">compare_dist_pos_features</span><span class="p">(</span><span class="nb">iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">fpr_lim</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Visualizing random forest trees and do feature importance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tp</span><span class="o">.</span><span class="n">visualize_random_forest</span><span class="p">([</span><span class="s1">&#39;dist-numeric&#39;</span><span class="p">,</span><span class="s1">&#39;linker-1mer&#39;</span><span class="p">,</span><span class="s1">&#39;linker-2mer&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Do DNAShape:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">shapepath</span> <span class="o">=</span> <span class="s2">&quot;data/dnashape&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">distances</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">21</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dnashape</span><span class="o">.</span><span class="n">plot_average_all</span><span class="p">(</span><span class="n">trainingpath</span><span class="p">,</span><span class="n">shapepath</span><span class="p">,</span><span class="n">distances</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Getting only sequence of specific distances:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># first make training parser from everything</span>
-<span class="n">train</span> <span class="o">=</span> <span class="n">trainingparser</span><span class="o">.</span><span class="n">TrainingParser</span><span class="p">(</span><span class="n">trainingpath</span><span class="p">,</span><span class="n">motiflen</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
-<span class="c1"># then we make a data frame with only the distance that we want, let&#39;s say 15</span>
-<span class="n">t2</span> <span class="o">=</span> <span class="n">train</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">train</span><span class="o">.</span><span class="n">training</span><span class="p">[</span><span class="s1">&#39;distance&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">15</span><span class="p">]</span>
-<span class="c1"># make training parser with the new data frame, it accepts both path</span>
-<span class="c1"># and data frame</span>
-<span class="n">train2</span> <span class="o">=</span> <span class="n">trainingparser</span><span class="o">.</span><span class="n">TrainingParser</span><span class="p">(</span><span class="n">t2</span><span class="p">,</span><span class="n">motiflen</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
-<span class="c1"># then write the sequences of that distance into a file</span>
-<span class="n">train2</span><span class="o">.</span><span class="n">get_seq_aligned</span><span class="p">(</span><span class="n">tofile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># first, make a data frame with only the distance that we want, let&#39;s say 15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t2</span> <span class="o">=</span> <span class="n">tp</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">train</span><span class="o">.</span><span class="n">training</span><span class="p">[</span><span class="s1">&#39;distance&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">15</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># make training parser with the new data frame, it accepts both path</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># and data frame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tp_newdist</span> <span class="o">=</span> <span class="n">tp</span><span class="o">.</span><span class="n">TrainingParser</span><span class="p">(</span><span class="n">t2</span><span class="p">,</span><span class="n">motiflen</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># then write the sequences of that distance into a file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tp_newdist</span> <span class="o">=</span> <span class="n">tp</span><span class="o">.</span><span class="n">get_seq_aligned</span><span class="p">(</span><span class="n">tofile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -256,6 +293,7 @@ probes:</p>
 <li class="toctree-l2"><a class="reference internal" href="#filter-training-data">Filter training data</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="code.html">code</a></li>
 </ul>
 
 <div class="relations">
@@ -263,6 +301,7 @@ probes:</p>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="index.html" title="previous chapter">Teacup’s documentation</a></li>
+      <li>Next: <a href="code.html" title="next chapter">code</a></li>
   </ul></li>
 </ul>
 </div>

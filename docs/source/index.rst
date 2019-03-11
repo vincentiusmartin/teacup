@@ -11,6 +11,7 @@ Teacup's documentation
    :caption: Contents:
 
    pipeline
+   code
 
 
 Indices and tables

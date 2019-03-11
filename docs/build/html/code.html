@@ -17,6 +17,7 @@
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Pipeline" href="pipeline.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -35,93 +36,6 @@
             
   <div class="section" id="code">
 <h1>code<a class="headerlink" href="#code" title="Permalink to this headline">¶</a></h1>
-<p>parsing the input files and analyze:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">infile</span> <span class="o">=</span> <span class="s2">&quot;data/dataset/all_Myc_Mad_2nd_myc_log_bound2.txt&quot;</span>
-<span class="n">negctrlfile</span> <span class="o">=</span> <span class="s2">&quot;data/dataset/all_Myc_Mad_2nd_myc_log_negctrl.txt&quot;</span>
-<span class="n">logsetting</span><span class="o">=</span> <span class="kc">True</span>
-<span class="n">pvalthres</span> <span class="o">=</span> <span class="o">.</span><span class="mi">05</span>
-
-<span class="n">tbl</span> <span class="o">=</span> <span class="n">read_tbl</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span>
-<span class="n">med</span> <span class="o">=</span> <span class="n">get_median_orientation</span><span class="p">(</span><span class="n">tbl</span><span class="p">)</span>
-
-<span class="n">cutoff</span> <span class="o">=</span> <span class="n">cutoff_from_negctrl</span><span class="p">(</span><span class="n">negctrlfile</span><span class="p">)</span>
-
-<span class="n">indivsum</span><span class="p">,</span><span class="n">twosites</span> <span class="o">=</span>  <span class="n">make_permutation</span><span class="p">(</span><span class="n">tbl</span><span class="p">)</span>
-<span class="n">classification</span> <span class="o">=</span> <span class="n">classify_probes</span><span class="p">(</span><span class="n">med</span><span class="p">,</span><span class="n">indivsum</span><span class="p">,</span><span class="n">twosites</span><span class="p">,</span><span class="n">cutoff</span><span class="p">,</span><span class="n">pvalthres</span><span class="p">)</span>
-
-<span class="n">classification2file</span><span class="p">(</span><span class="n">classification</span><span class="p">)</span>
-
-<span class="n">ax</span> <span class="o">=</span> <span class="n">plot_median_binding_sum</span><span class="p">(</span><span class="n">med</span><span class="p">,</span><span class="n">classification</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">log</span><span class="o">=</span><span class="n">logsetting</span><span class="p">,</span><span class="n">plotname</span><span class="o">=</span><span class="s2">&quot;plot_overlap&quot;</span><span class="p">)</span>
-<span class="n">ax_o1</span> <span class="o">=</span> <span class="n">plot_median_binding_sum</span><span class="p">(</span><span class="n">med</span><span class="p">,</span><span class="n">classification</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">log</span><span class="o">=</span><span class="n">logsetting</span><span class="p">,</span><span class="n">plotname</span><span class="o">=</span><span class="s2">&quot;plot_o1&quot;</span><span class="p">)</span>
-<span class="n">ax_o2</span> <span class="o">=</span> <span class="n">plot_median_binding_sum</span><span class="p">(</span><span class="n">med</span><span class="p">,</span><span class="n">classification</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">log</span><span class="o">=</span><span class="n">logsetting</span><span class="p">,</span><span class="n">plotname</span><span class="o">=</span><span class="s2">&quot;plot_o2&quot;</span><span class="p">)</span>
-
-<span class="n">scatter_boxplot</span><span class="p">(</span><span class="n">indivsum</span><span class="p">,</span><span class="n">twosites</span><span class="p">,</span><span class="mi">2001</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>get pwm distance:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pwm</span> <span class="o">=</span> <span class="n">read_dna_pwm</span><span class="p">(</span><span class="s2">&quot;data/pwm/MYC_M4532_1.02.txt&quot;</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">7</span><span class="p">)</span>
-<span class="n">categories</span> <span class="o">=</span> <span class="n">read_classification_file</span><span class="p">(</span><span class="s2">&quot;data/generated/classification.txt&quot;</span><span class="p">)</span>
-
-<span class="n">seq</span> <span class="o">=</span> <span class="n">get_seq</span><span class="p">(</span><span class="n">tbl</span><span class="p">,</span><span class="s2">&quot;wt&quot;</span><span class="p">,</span><span class="n">categories</span><span class="p">,</span><span class="s2">&quot;coop_overlap&quot;</span><span class="p">)</span>
-<span class="n">dist</span> <span class="o">=</span> <span class="n">get_distances_pwm</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span><span class="n">pwm</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>classify all data:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">classify_all</span><span class="p">(</span><span class="n">tbl</span><span class="p">,</span><span class="n">cutoff</span><span class="p">,</span><span class="n">pvalthres</span><span class="p">)</span>
-<span class="n">plot_training</span><span class="p">(</span><span class="s2">&quot;training.csv&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>get scatter for all permutations in a specific probe:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scatter_boxplot_probe</span><span class="p">(</span><span class="n">tbl</span><span class="p">,</span><span class="mi">2014</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>make distance plot using pwm and e-score data:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pwm</span> <span class="o">=</span> <span class="n">read_dna_pwm</span><span class="p">(</span><span class="s2">&quot;data/pwm/MYC-MAX_8mers_pwm.txt&quot;</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">15</span><span class="p">)</span>
-<span class="n">escore</span> <span class="o">=</span> <span class="n">read_escore</span><span class="p">(</span><span class="s2">&quot;data/escore/MYC-MAX_8mers_11111111.txt&quot;</span><span class="p">)</span>
-
-<span class="n">categories</span> <span class="o">=</span> <span class="n">read_classification_file</span><span class="p">(</span><span class="s2">&quot;classification.txt&quot;</span><span class="p">)</span>
-
-<span class="n">mutpos</span> <span class="o">=</span> <span class="n">get_mutpos</span><span class="p">(</span><span class="n">tbl</span><span class="p">,</span><span class="n">categories</span><span class="p">[</span><span class="s2">&quot;coop_overlap&quot;</span><span class="p">])</span>
-<span class="n">seqdict</span> <span class="o">=</span> <span class="n">get_seq</span><span class="p">(</span><span class="n">tbl</span><span class="p">,</span><span class="s2">&quot;wt&quot;</span><span class="p">,</span><span class="n">categories</span><span class="p">[</span><span class="s2">&quot;coop_overlap&quot;</span><span class="p">])</span>
-<span class="n">coop_overlap</span> <span class="o">=</span> <span class="n">get_distances_pwm</span><span class="p">(</span><span class="n">seqdict</span><span class="p">,</span><span class="n">pwm</span><span class="p">)</span>
-
-<span class="n">lineplot_pwm_escore</span><span class="p">(</span><span class="n">seqdict</span><span class="p">,</span><span class="n">pwm</span><span class="p">,</span><span class="n">escore</span><span class="p">,</span><span class="n">mutpos</span><span class="p">,</span><span class="n">startoffset</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">endoffset</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>filter sequence using pwm and escore:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">filter_sequences</span><span class="p">(</span><span class="n">seqdict</span><span class="p">,</span><span class="n">pwm</span><span class="p">,</span><span class="n">escore</span><span class="p">,</span><span class="n">category</span><span class="o">=</span><span class="s2">&quot;additive&quot;</span><span class="p">)</span>
-<span class="n">filter_sequences</span><span class="p">(</span><span class="n">seqdict</span><span class="p">,</span><span class="n">pwm</span><span class="p">,</span><span class="n">escore</span><span class="p">,</span><span class="n">category</span><span class="o">=</span><span class="s2">&quot;coop&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>to plot after filter:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># read classification file so we don&#39;t need to run the function again</span>
-<span class="n">categories</span> <span class="o">=</span> <span class="n">read_classification_file</span><span class="p">(</span><span class="s2">&quot;data/generated/classification.txt&quot;</span><span class="p">)</span>
-
-<span class="c1"># this read from the output of filter_sequences</span>
-<span class="n">filteredcategories</span> <span class="o">=</span> <span class="n">read_classification_file</span><span class="p">(</span><span class="s2">&quot;data/generated/classification-filtered.txt&quot;</span><span class="p">)</span>
-
-<span class="n">ax</span> <span class="o">=</span> <span class="n">plot_median_binding_sum</span><span class="p">(</span><span class="n">med</span><span class="p">,</span><span class="n">categories</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">log</span><span class="o">=</span><span class="n">logsetting</span><span class="p">,</span><span class="n">plotname</span><span class="o">=</span><span class="s2">&quot;plot_overlap&quot;</span><span class="p">,</span>
-<span class="n">subset_coop</span><span class="o">=</span><span class="n">filteredcategories</span><span class="p">[</span><span class="s2">&quot;coop_filtered&quot;</span><span class="p">],</span>
-<span class="n">subset_additive</span><span class="o">=</span><span class="n">filteredcategories</span><span class="p">[</span><span class="s2">&quot;additive_filtered&quot;</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>UPDATED</p>
-<dl class="docutils">
-<dt>to initialize::</dt>
-<dd><p class="first">infile = “data/dataset/all_Myc_Mad_2nd_myc_log_bound2.txt”
-negctrlfile = “data/dataset/all_Myc_Mad_2nd_myc_log_negctrl.txt”
-logsetting= True
-pvalthres = .05</p>
-<p>probes = probeparser.ProbeParser(infile,negctrlfile)</p>
-<p>probes.scatter_boxplot(2000)</p>
-<p>classification = classifier.classify_probes(probes,pvalthres)</p>
-<p>utils.dictlist2file(classification,”test.txt”)</p>
-<p>classification = utils.read_dictlist_file(“test.txt”)</p>
-<p class="last">ax = classifier.plot_median_binding_sum(probes,classification,0,log=logsetting,plotname=”plot_overlap”)
-#ax_o1 = plot_median_binding_sum(med,classification,1,log=logsetting,plotname=”plot_o1”)
-#ax_o2 = plot_median_binding_sum(med,classification,2,log=logsetting,plotname=”plot_o2”)</p>
-</dd>
-</dl>
 </div>
 
 
@@ -142,14 +56,16 @@ pvalthres = .05</p>
 
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="pipeline.html">Pipeline</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">code</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="pipeline.html" title="previous chapter">Pipeline</a></li>
   </ul></li>
 </ul>
 </div>

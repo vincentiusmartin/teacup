@@ -186,7 +186,7 @@ probes::
 
 To make filter and make the training data::
 
-    >>>sf.filtertrain_to_csv(probes,classification,filename="training.csv")
+    >>> sf.filtertrain_to_csv(probes,classification,filename="training.csv")
     Number filtered cooperative 113
     Number filtered additive 199
 
@@ -209,20 +209,57 @@ Output:
 Filter training data
 ==================================
 
+To do processing on training data, `trainingparser` should be used. First,
+import::
+
+     >>> import sys
+     >>> sys.path.insert(0, 'src')
+     >>> from teacup.training import trainingparser
+
+To initialize::
+
+     >>> # path to the training file (currently obtained from Myc)
+     >>> trainingpath = "data/generated/training.csv"
+
+     >>> # make the training object. currently this requires the path and the
+     >>> # length of the motif, for Myc, it is 6
+     >>> tp = trainingparser.TrainingParser(trainingpath,motiflen=6)
+
+Test all models (still hardcoded inside... currently this is not really used but
+we can fix later if needed)::
+
+     >> tp.test_model(["dist-numeric","linker_2mer"], testing_type="cv", outpath="roc.png")
+
 Compare distance features only::
 
-    trainingpath = "data/generated/training.csv"
-    train = trainingparser.TrainingParser(trainingpath,motiflen=6)
-    train.compare_distance_features(iter=100, fpr_lim=20)
+    >>> # compare distance
+    >>> tp.compare_distance_features(iter=100, fpr_lim=20)
+
+Compare linker features::
+
+     >>> tp.compare_dist_linker_features(iter=10, fpr_lim=20)
+
+Compare positional features::
+
+     >>> tp.compare_dist_pos_features(iter=10,fpr_lim=20)
+
+Visualizing random forest trees and do feature importance::
+
+     >>> tp.visualize_random_forest(['dist-numeric','linker-1mer','linker-2mer'])
+
+Do DNAShape::
+
+     >>> shapepath = "data/dnashape"
+     >>> distances = range(10,21)
+     >>> dnashape.plot_average_all(trainingpath,shapepath,distances)
+
 
 Getting only sequence of specific distances::
 
-    # first make training parser from everything
-    train = trainingparser.TrainingParser(trainingpath,motiflen=6)
-    # then we make a data frame with only the distance that we want, let's say 15
-    t2 = train.training.loc[train.training['distance'] == 15]
-    # make training parser with the new data frame, it accepts both path
-    # and data frame
-    train2 = trainingparser.TrainingParser(t2,motiflen=6)
-    # then write the sequences of that distance into a file
-    train2.get_seq_aligned(tofile=True)
+    >>> # first, make a data frame with only the distance that we want, let's say 15
+    >>> t2 = tp.training.loc[train.training['distance'] == 15]
+    >>> # make training parser with the new data frame, it accepts both path
+    >>> # and data frame
+    >>> tp_newdist = tp.TrainingParser(t2,motiflen=6)
+    >>> # then write the sequences of that distance into a file
+    >>> tp_newdist = tp.get_seq_aligned(tofile=True)
