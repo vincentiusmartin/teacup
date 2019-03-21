@@ -3,7 +3,9 @@
 import pandas as pd
 import itertools
 
-NEW_DATA_PATH = "../data/generated/training_distance_1mer_2mer.csv"
+#NEW_DATA_PATH = "../data/generated/training_distance_1mer_2mer_counts.csv"
+#NEW_DATA_PATH = "../data/generated/training_distance_1mer_2mer_fracs.csv"
+NEW_DATA_PATH = "../data/generated/training_numeric_1mer_2mer_fracs.csv"
 DATA_PATH = "../data/generated/training.csv"
 
 def get_seq(data):
@@ -16,7 +18,7 @@ def get_seq(data):
 
     return data["sequence"].values
 
-def get_kmer(num, seq, bpos1, bpos2):
+def get_kmer(num, seq, bpos1, bpos2, frac=True):
     '''
     Number of distinct k-mer in the sequence
     Input: num, seq where num = k and seq is the sequence
@@ -34,19 +36,26 @@ def get_kmer(num, seq, bpos1, bpos2):
 
     # initialize index i to 0
     i = 0
+    tot = 0
     #iterate through the sequence
     while bpos1 + 4 + i < bpos2 - 2:
         # get the read of length num
         read = seq[bpos1+4+i:bpos1+4+i+num]
         # add this read to the set
         kmer_dict[read] += 1
+        tot += 1
         # increment index
         i += 1
+
+    # if frac is true, get fraction instead of counts
+    if frac:
+        for read in kmer_dict:
+            kmer_dict[read] = kmer_dict[read]/tot
 
     # return the dictionary
     return kmer_dict
 
-def get_col(num, seq_col, bpos1_col, bpos2_col):
+def get_col(num, seq_col, bpos1_col, bpos2_col, frac=True):
     # initialize an empty list to store the output
     comb_output = []
     
@@ -56,7 +65,7 @@ def get_col(num, seq_col, bpos1_col, bpos2_col):
         # to the output list
         output = []
         # ret is a dictionary of count of every possible num-mer
-        ret = get_kmer(num, seq, bpos1, bpos2)
+        ret = get_kmer(num, seq, bpos1, bpos2, frac)
         for val in ret.values():
             output.append(val)
         comb_output.append(output)
@@ -91,6 +100,10 @@ def add_col(df, num, kmer_dict, comb_output):
     return pd.DataFrame(newDf, columns=columns)
 
 def make_categorical(df):
+    '''
+    This function returns a dataframe where the distance has been converted from numerical
+    to categorical
+    '''
     # replace numerical distance with categorical
     one_hot = pd.get_dummies(df['distance']).values.tolist()
     col_names = []
@@ -117,7 +130,7 @@ if __name__ == "__main__":
     k = [1,2,]
     # get the data
     df = pd.read_csv(DATA_PATH)
-    df = make_categorical(df)
+    #df = make_categorical(df)
     
     # -----------------------------to drop or not to drop distance column--------------------
     # df = df.drop(['distance'], axis=1)
@@ -129,7 +142,7 @@ if __name__ == "__main__":
     #add columns for the kmers
     for num in k:
         print("now doing kmer number", num)
-        kmer_dict, comb_output = get_col(num, seq, df['bpos1'].values, df['bpos2'].values)
+        kmer_dict, comb_output = get_col(num, seq, df['bpos1'].values, df['bpos2'].values, True)
         df = add_col(df, num, kmer_dict, comb_output)
 
     # # export to a new file
