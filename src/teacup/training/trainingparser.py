@@ -144,7 +144,7 @@ class TrainingParser:
         # do feature importance, code is taken from Farica's
         feature_importances = pd.DataFrame(rf.feature_importances_,
                                            index = x_df.columns,
-                                            columns=['importance']).sort_values('importance',ascending=False)
+                                           columns=['importance']).sort_values('importance',ascending=False)
         print(feature_importances)
 
 
@@ -197,7 +197,7 @@ class TrainingParser:
             features = utils.merge_listdict(features,rfeature)
 
         df_features = pd.DataFrame(features)
-        if ret_tbl:
+        if ret_tbl: # return as data frame
             return df_features
         else:
             return df_features.values.tolist()
