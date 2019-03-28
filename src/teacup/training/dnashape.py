@@ -24,6 +24,9 @@ class DNAShape:
                 elif file_extension == ".HelT":
                     self.helt = utils.read_dictlist_file(path)
 
+    def get_shape_names():
+        return ["ProT","MGW","Roll","HelT"]
+
     def plot_average(self, labels, pthres=0.05, mark=[], path=".", plotlabel="Average DNA shape"):
         plt.clf()
         colors = ['orangered','dodgerblue','lime']
@@ -97,20 +100,53 @@ class DNAShape:
         with PdfPages(path) as pdf:
             pdf.savefig(fig)
 
-def plot_average_all(trainingpath,shapepath,distances):
-    for dist in distances:
-        print("Plotting for dist %d" % dist)
-        dist_path = "%s/d%s" % (shapepath,dist)
-        bpos_file = "%s/bindingpos.txt" % dist_path
-        with open(bpos_file,'r') as f:
-            bpos = f.read().strip().split(",")
-            bpos = [int(x) for x in bpos]
-        train = trainingparser.TrainingParser(trainingpath,motiflen=6)
-        # make a new data frame with only the distance on each iteration
-        t2 = train.training.loc[train.training['distance'] == dist]
-        train2 = trainingparser.TrainingParser(t2,motiflen=6)
-        li = train2.get_labels_indexes()
-        shape = DNAShape(dist_path)
-        for p in [0.05,0.1]:
-            plot_path = "%s/shape-p=%.2f.pdf"%(dist_path,p)
-            shape.plot_average(li,pthres=p,mark=bpos,path=plot_path,plotlabel="Average DNA shape for d=%d,p=%.2f" % (dist,p))
+# ============== This is a separate class to contain everything ==============
+
+class DNAShapes:
+
+    def __init__(self, path, bsites):
+        # INITIALIZE
+        self.shapedict = {}
+        self.dists = []
+        self.bsites = bsites
+
+        dirs = next(os.walk(path))[1]
+        self.dists = [int(d[1:]) for d in dirs]
+        self.maxdist = max(self.dists)
+        for distdir in dirs:
+            distpath = "%s/%s" % (path,distdir)
+            shape = DNAShape(distpath)
+            self.shapedict[distdir] = shape
+
+    def get_features(self):
+        span_out = 3
+        numseq = len(self.bsites[0])
+        shape_names = DNAShape.get_shape_names()
+        features = {name:[[] for _ in range(numseq)] for name in shape_names}
+
+        for dist,shape_dist in self.shapedict.items():
+            for shape_name in shape_names:
+                shapes = getattr(shape_dist, shape_name.lower())
+                for seqid in shapes:
+                    print(len(shapes[seqid]))
+                break
+            break
+
+    # TODO FIX BASED ON THE CLASS
+    def plot_average_all(trainingpath,shapepath,distances):
+        for dist in distances:
+            print("Plotting for dist %d" % dist)
+            dist_path = "%s/d%s" % (shapepath,dist)
+            bpos_file = "%s/bindingpos.txt" % dist_path
+            with open(bpos_file,'r') as f:
+                bpos = f.read().strip().split(",")
+                bpos = [int(x) for x in bpos]
+            train = trainingparser.TrainingParser(trainingpath,motiflen=6)
+            # make a new data frame with only the distance on each iteration
+            t2 = train.training.loc[train.training['distance'] == dist]
+            train2 = trainingparser.TrainingParser(t2,motiflen=6)
+            li = train2.get_labels_indexes()
+            shape = DNAShape(dist_path)
+            for p in [0.05,0.1]:
+                plot_path = "%s/shape-p=%.2f.pdf"%(dist_path,p)
+                shape.plot_average(li,pthres=p,mark=bpos,path=plot_path,plotlabel="Average DNA shape for d=%d,p=%.2f" % (dist,p))

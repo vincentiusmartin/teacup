@@ -54,6 +54,9 @@ class TrainingParser:
         return self.training.groupby("label").groups
 
     def get_bsites(self):
+        '''
+        return a list of bpos1,bpos2 where each is a dictionary
+        '''
         sitedict = {}
         bpos1 = self.training["bpos1"].to_dict()
         bpos2 = self.training["bpos2"].to_dict()
@@ -71,6 +74,10 @@ class TrainingParser:
                     f.write("%s\n"%seqdict[key])
 
     def get_seq_aligned(self,tofile=False):
+        '''
+        this function align sequence based on its first bpos location, useful
+        to get shape features
+        '''
         min_dist = self.training.min()["bpos1"]
         max_dist = self.training.max()["bpos1"]
         trimlen = len(self.training.iloc[0]["sequence"]) - (max_dist - min_dist)
