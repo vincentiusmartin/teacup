@@ -19,11 +19,23 @@ if __name__=="__main__":
     shapepath = "data/dnashape"
     distances = range(10,21)
 
-    #tp = trainingparser.TrainingParser(trainingpath,6)
+    tp = trainingparser.TrainingParser(trainingpath,6)
+    #t = tp.get_features(["dist-numeric","shape"])
+    tp.compare_prefix_features(["dist-numeric", "linker-1mer", "linker-2mer"],iter=100,max_depth=10,fpr_lim=100)
+    #tp.visualize_random_forest(['dist-numeric','linker-1mer'])
+    #f = tp.get_features(["dist-numeric","positional_in_1_out_2"],True)
+    #print(f)
+    #t2 = tp.training.loc[tp.training['distance'] == 20]
+    #tp_newdist = trainingparser.TrainingParser(t2,motiflen=6)
+    #tp_newdist.get_seq(tofile=True)
+    #print(isinstance(tp,trainingparser.TrainingParser))
     #tp.test_model(["dist-numeric","linker_2mer"], testing_type="cv", outpath="roc.png")
     #tp.visualize_random_forest(['dist-numeric','linker-1mer','linker-2mer'])
     #tp.compare_distance_features(iter=1,fpr_lim=100)
     #tp.compare_dist_linker_features(iter=10, fpr_lim=20)
-    #tp.compare_dist_pos_features(iter=10,fpr_lim=20)
+    #tp.compare_dist_pos_features(iter=10,fpr_lim=100)
+    #xfe = tp.get_features(["positional_in_3_out_2"],ret_tbl=True)
 
-    ds = dnashape.plot_average_all(trainingpath,shapepath,distances)
+    #dnashape.plot_average_all(trainingpath,shapepath,distances)
+    #ds = dnashape.DNAShapes(shapepath,tp.get_bsites())
+    #a = ds.get_features()
