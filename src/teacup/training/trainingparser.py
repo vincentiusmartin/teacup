@@ -16,7 +16,11 @@ from sklearn import model_selection
 from sklearn import preprocessing
 
 from teacup.training import simpleclassifier
+from teacup.training import dnashape
 from teacup import utils
+
+# TODO: hard coded for now, make it better later
+shapepath = "/Users/vincentiusmartin/Research/Cooperativity/teacup/data/dnashape"
 
 def calculate_fpr_tpr(ytrue,ypred):
     if len(ytrue) != len(ypred):
@@ -70,7 +74,8 @@ class TrainingParser:
             keys = sorted(seqdict.keys())
             with open("sequences.txt",'w') as f:
                 for key in keys:
-                    f.write(">%s\n"%key)
+                    key_int = int(key)
+                    f.write(">%d\n"%key_int)
                     f.write("%s\n"%seqdict[key])
 
     def get_seq_aligned(self,tofile=False):
@@ -129,8 +134,8 @@ class TrainingParser:
 
 # ========= Visualization =========
 
-    def visualize_random_forest(self, types):
-        rf = ensemble.RandomForestClassifier(n_estimators=10, max_depth=2,random_state=0)
+    def visualize_random_forest(self, types, max_depth=10):
+        rf = ensemble.RandomForestClassifier(n_estimators=100, max_depth=max_depth,random_state=0)
         # print trees
         # feature importance
         x_df = self.get_features(types,ret_tbl=True)
@@ -146,7 +151,7 @@ class TrainingParser:
                 class_names = ['additive','cooperative'],
                 rounded = True, proportion = False,
                 precision = 2, filled = True)
-        subprocess.call(['dot', '-Tpng', 'tree.dot', '-o', 'tree.png', '-Gdpi=600'])
+        subprocess.call(['dot', '-Tpdf', 'tree.dot', '-o', 'tree.pdf', '-Gdpi=600'])
 
         # do feature importance, code is taken from Farica's
         feature_importances = pd.DataFrame(rf.feature_importances_,
@@ -162,6 +167,7 @@ class TrainingParser:
             dist-categorical
             linker_[k]mer
             positional_in_[x]_out_[y]
+            shape
         ret_tbl:
             False: return a list of list
             True: return a list of dictionary--this can be directly converted
@@ -182,6 +188,7 @@ class TrainingParser:
                 #features.append(one_hot.values.tolist())
                 rfeature = one_hot.to_dict('records')
             elif feature_type.startswith("linker"):
+                # this uses kmer ratio
                 rfeature = []
                 for idx,row in self.training.iterrows():
                     start = row["bpos1"] + self.motiflen // 2
@@ -201,6 +208,10 @@ class TrainingParser:
                     pos_feature = utils.extract_positional_features(row["sequence"], row["bpos1"], row["bpos2"],
                                  span_out=s_out, span_in=s_in)
                     rfeature.append(pos_feature)
+            elif feature_type == "shape":
+                ds = dnashape.DNAShapes(shapepath,self.get_bsites())
+                rfeature = ds.get_features()
+
             features = utils.merge_listdict(features,rfeature)
 
         df_features = pd.DataFrame(features)
@@ -302,7 +313,7 @@ class TrainingParser:
             auc_dict = {}
             for si in span_in_list:
                 type = "positional_in_%d_out_%d" % (si,so)
-                print(type)
+                #print(type)
                 features = [type,"dist-numeric"]
                 x_train = self.get_features(features)
                 fea_name = ",".join(features)
@@ -315,17 +326,17 @@ class TrainingParser:
         utils.multiple_scatter_boxplots(auc_all,ylabel="AUC",filepath=path)
 
 
-    def compare_dist_linker_features(self, iter=10, fpr_lim=100,path="linker.png"):
-        prefix = ["dist-numeric", "linker_1mer", "linker_2mer"]
+    def compare_prefix_features(self, features, iter=10, fpr_lim=100, max_depth=10, path="linker.png"):
+        #prefix = ["dist-numeric", "linker_1mer", "linker_2mer"]
         y_train = self.get_numeric_label().values
 
         clfs = {
-            "random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=2,random_state=0)
+            "random forest":ensemble.RandomForestClassifier(n_estimators=100, max_depth=max_depth)
         }
 
         auc_dict = {}
         for i in range(2):
-            for comb in itertools.combinations(prefix, i+1):
+            for comb in itertools.combinations(features, i+1):
                 comb_name = ", ".join(comb)
                 auc_dict[comb_name] = []
                 for i in range(iter):

@@ -241,7 +241,7 @@ Compare linker features::
 
 Compare positional features::
 
-     >>> tp.compare_dist_pos_features(iter=10,fpr_lim=20)
+     >>> tp.compare_prefix_features(["dist-numeric", "linker_1mer", "linker_2mer"],iter=10,fpr_lim=20)
 
 Visualizing random forest trees and do feature importance::
 

@@ -196,7 +196,7 @@ def extract_positional_features(seq, bpos1, bpos2, span_out, span_in):
 
     # start position
     b1_left = seq[pos1-span_out:pos1+1]
-    b1_right = seq[pos1:pos1+span_out]
+    b1_right = seq[pos1:pos1+span_in]
 
     b2_left = seq[pos2-span_in:pos2+1]
     b2_right = seq[pos2:pos2+span_out+1]
