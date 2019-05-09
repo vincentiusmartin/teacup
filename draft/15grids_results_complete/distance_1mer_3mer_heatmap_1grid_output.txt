@@ -1,0 +1,150 @@
+Current parameter combination is n_estimators: 100 and max_depth: 2
+Average AUC: 0.6326968592462431
+Average accuracy: 0.6319590373783922
+
+
+
+Current parameter combination is n_estimators: 100 and max_depth: 5
+Average AUC: 0.644610609789585
+Average accuracy: 0.6380343061955965
+
+
+
+Current parameter combination is n_estimators: 100 and max_depth: 10
+Average AUC: 0.6508909893592367
+Average accuracy: 0.6536866359447003
+
+
+
+Current parameter combination is n_estimators: 100 and max_depth: 15
+Average AUC: 0.6509542413989774
+Average accuracy: 0.6549907834101382
+
+
+
+Current parameter combination is n_estimators: 100 and max_depth: 20
+Average AUC: 0.6513837689990907
+Average accuracy: 0.6573599590373784
+
+
+
+Current parameter combination is n_estimators: 500 and max_depth: 2
+Average AUC: 0.6358570455332859
+Average accuracy: 0.632347670250896
+
+
+
+Current parameter combination is n_estimators: 500 and max_depth: 5
+Average AUC: 0.6472238930277321
+Average accuracy: 0.6382585765488992
+
+
+
+Current parameter combination is n_estimators: 500 and max_depth: 10
+Average AUC: 0.6513488018958937
+Average accuracy: 0.6568812083973373
+
+
+
+Current parameter combination is n_estimators: 500 and max_depth: 15
+Average AUC: 0.6546248789885536
+Average accuracy: 0.6595698924731183
+
+
+
+Current parameter combination is n_estimators: 500 and max_depth: 20
+Average AUC: 0.6543619851581595
+Average accuracy: 0.6608975934459805
+
+
+
+Current parameter combination is n_estimators: 700 and max_depth: 2
+Average AUC: 0.6395968577618935
+Average accuracy: 0.6321233998975934
+
+
+
+Current parameter combination is n_estimators: 700 and max_depth: 5
+Average AUC: 0.64843972012612
+Average accuracy: 0.6402514080901177
+
+
+
+Current parameter combination is n_estimators: 700 and max_depth: 10
+Average AUC: 0.6526594352108063
+Average accuracy: 0.6591065028161802
+
+
+
+Current parameter combination is n_estimators: 700 and max_depth: 15
+Average AUC: 0.6532088139185177
+Average accuracy: 0.6624920634920634
+
+
+
+Current parameter combination is n_estimators: 700 and max_depth: 20
+Average AUC: 0.6524046755419667
+Average accuracy: 0.659279569892473
+
+
+
+Current parameter combination is n_estimators: 1000 and max_depth: 2
+Average AUC: 0.640738001875445
+Average accuracy: 0.6327900665642601
+
+
+
+Current parameter combination is n_estimators: 1000 and max_depth: 5
+Average AUC: 0.6472965406492334
+Average accuracy: 0.6386016385048642
+
+
+
+Current parameter combination is n_estimators: 1000 and max_depth: 10
+Average AUC: 0.6589880805201825
+Average accuracy: 0.6596763952892986
+
+
+
+Current parameter combination is n_estimators: 1000 and max_depth: 15
+Average AUC: 0.6526935241286868
+Average accuracy: 0.6607875064004096
+
+
+
+Current parameter combination is n_estimators: 1000 and max_depth: 20
+Average AUC: 0.656011604014653
+Average accuracy: 0.6611187916026625
+
+
+
+Current parameter combination is n_estimators: 2000 and max_depth: 2
+Average AUC: 0.6377979346129787
+Average accuracy: 0.6317388632872504
+
+
+
+Current parameter combination is n_estimators: 2000 and max_depth: 5
+Average AUC: 0.6453328542120397
+Average accuracy: 0.6388023553507425
+
+
+
+Current parameter combination is n_estimators: 2000 and max_depth: 10
+Average AUC: 0.6535487994201223
+Average accuracy: 0.658621607782898
+
+
+
+Current parameter combination is n_estimators: 2000 and max_depth: 15
+Average AUC: 0.6566635829815701
+Average accuracy: 0.6645683563748078
+
+
+
+Current parameter combination is n_estimators: 2000 and max_depth: 20
+Average AUC: 0.6572003902287789
+Average accuracy: 0.6630450588837685
+
+
+
