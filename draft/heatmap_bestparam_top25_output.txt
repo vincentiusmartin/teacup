@@ -1,0 +1,704 @@
+Current parameter combination is n_estimators: 100 and max_depth: 5
+The top 25 features are:
+distance
+1mer_A_count
+1mer_C_count
+3mer_ACC_count
+1mer_G_count
+2mer_AA_count
+2mer_CA_count
+2mer_TG_count
+3mer_GGC_count
+3mer_CAT_count
+3mer_CCA_count
+3mer_CCT_count
+1mer_T_count
+2mer_AC_count
+2mer_GC_count
+2mer_CG_count
+2mer_CC_count
+3mer_GCA_count
+3mer_GCG_count
+3mer_GCC_count
+3mer_GTG_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CGC_count
+3mer_CCG_count
+Average AUC: 0.6775019139544515
+Average accuracy: 0.6602802419354837Current parameter combination is n_estimators: 100 and max_depth: 10
+The top 25 features are:
+1mer_C_count
+distance
+1mer_A_count
+1mer_G_count
+2mer_CA_count
+2mer_CC_count
+3mer_ACC_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_GC_count
+2mer_CG_count
+2mer_TG_count
+2mer_TC_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CAT_count
+3mer_CCA_count
+3mer_CCC_count
+3mer_CCT_count
+3mer_TCC_count
+Average AUC: 0.6839656072551759
+Average accuracy: 0.6753568548387097Current parameter combination is n_estimators: 100 and max_depth: 15
+The top 25 features are:
+1mer_C_count
+distance
+1mer_A_count
+1mer_G_count
+2mer_CA_count
+2mer_CC_count
+3mer_ACC_count
+3mer_CAT_count
+3mer_CCT_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GA_count
+2mer_GG_count
+2mer_GC_count
+2mer_CG_count
+2mer_TG_count
+2mer_TC_count
+3mer_GGC_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CCA_count
+Average AUC: 0.6802381423118711
+Average accuracy: 0.6745090725806453Current parameter combination is n_estimators: 100 and max_depth: 20
+The top 25 features are:
+1mer_C_count
+distance
+1mer_A_count
+1mer_G_count
+1mer_T_count
+2mer_GC_count
+2mer_CA_count
+2mer_CC_count
+2mer_TG_count
+3mer_CCA_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GA_count
+2mer_GG_count
+2mer_CG_count
+2mer_TC_count
+3mer_ACC_count
+3mer_GGC_count
+3mer_GCG_count
+3mer_GCC_count
+3mer_CAC_count
+3mer_CAT_count
+3mer_CCC_count
+3mer_CCT_count
+Average AUC: 0.6386776269326391
+Average accuracy: 0.6595120967741935Current parameter combination is n_estimators: 100 and max_depth: 25
+The top 25 features are:
+1mer_C_count
+distance
+1mer_A_count
+1mer_G_count
+2mer_GC_count
+2mer_CA_count
+2mer_CC_count
+3mer_ACC_count
+3mer_CAC_count
+3mer_CAT_count
+3mer_CCA_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_CG_count
+2mer_TG_count
+2mer_TC_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CGC_count
+3mer_CCC_count
+3mer_CCT_count
+Average AUC: 0.6625048221222813
+Average accuracy: 0.6637953629032259Current parameter combination is n_estimators: 500 and max_depth: 5
+The top 25 features are:
+distance
+1mer_A_count
+1mer_C_count
+3mer_ACC_count
+1mer_G_count
+2mer_AA_count
+2mer_CC_count
+3mer_CAG_count
+3mer_CAT_count
+3mer_CCA_count
+3mer_CCT_count
+1mer_T_count
+2mer_AG_count
+2mer_GG_count
+2mer_GC_count
+2mer_CA_count
+2mer_CG_count
+2mer_TG_count
+2mer_TC_count
+3mer_AAA_count
+3mer_AGC_count
+3mer_GCC_count
+3mer_CCG_count
+3mer_CCC_count
+3mer_TCC_count
+Average AUC: 0.6694861819131159
+Average accuracy: 0.6573850806451614Current parameter combination is n_estimators: 500 and max_depth: 10
+The top 25 features are:
+distance
+1mer_A_count
+1mer_C_count
+1mer_G_count
+2mer_CA_count
+2mer_CC_count
+2mer_TG_count
+3mer_ACC_count
+3mer_CAT_count
+3mer_CCA_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_GC_count
+2mer_CG_count
+2mer_TC_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CGC_count
+3mer_CCC_count
+3mer_CCT_count
+Average AUC: 0.6711168551282053
+Average accuracy: 0.6791058467741934Current parameter combination is n_estimators: 500 and max_depth: 15
+The top 25 features are:
+1mer_C_count
+distance
+1mer_A_count
+1mer_G_count
+2mer_GC_count
+2mer_CA_count
+2mer_CC_count
+3mer_ACC_count
+3mer_CAT_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_CG_count
+2mer_TG_count
+2mer_TC_count
+3mer_GGC_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CGC_count
+3mer_CCA_count
+3mer_CCC_count
+Average AUC: 0.6971987325433149
+Average accuracy: 0.6679102822580646Current parameter combination is n_estimators: 500 and max_depth: 20
+The top 25 features are:
+1mer_C_count
+distance
+1mer_A_count
+1mer_G_count
+2mer_GC_count
+2mer_CA_count
+2mer_CC_count
+2mer_TG_count
+3mer_ACC_count
+3mer_CAT_count
+3mer_CCA_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_CG_count
+2mer_TC_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CGC_count
+3mer_CCC_count
+3mer_CCT_count
+Average AUC: 0.6814734054417293
+Average accuracy: 0.6785100806451613Current parameter combination is n_estimators: 500 and max_depth: 25
+The top 25 features are:
+1mer_C_count
+distance
+1mer_A_count
+1mer_G_count
+2mer_GC_count
+2mer_CA_count
+2mer_CC_count
+3mer_ACC_count
+3mer_CAT_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_CG_count
+2mer_TG_count
+2mer_TC_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CGC_count
+3mer_CCA_count
+3mer_CCC_count
+3mer_CCT_count
+Average AUC: 0.6979386703346119
+Average accuracy: 0.6601834677419355Current parameter combination is n_estimators: 700 and max_depth: 5
+The top 25 features are:
+distance
+1mer_A_count
+1mer_C_count
+3mer_ACC_count
+2mer_AA_count
+2mer_CA_count
+2mer_CC_count
+2mer_TG_count
+3mer_CAT_count
+3mer_CCT_count
+1mer_G_count
+1mer_T_count
+2mer_AG_count
+2mer_GG_count
+2mer_GC_count
+2mer_CG_count
+2mer_TC_count
+3mer_AAA_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CCA_count
+3mer_CCC_count
+3mer_TCC_count
+2mer_AC_count
+Average AUC: 0.6765688398394538
+Average accuracy: 0.6675473790322581Current parameter combination is n_estimators: 700 and max_depth: 10
+The top 25 features are:
+1mer_C_count
+distance
+1mer_A_count
+1mer_G_count
+2mer_CA_count
+2mer_CC_count
+3mer_ACC_count
+3mer_CAT_count
+3mer_CCA_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_GC_count
+2mer_CG_count
+2mer_TG_count
+2mer_TC_count
+3mer_GGC_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CCC_count
+3mer_CCT_count
+2mer_AT_count
+Average AUC: 0.6892902218972118
+Average accuracy: 0.6662620967741937Current parameter combination is n_estimators: 700 and max_depth: 15
+The top 25 features are:
+distance
+1mer_A_count
+1mer_C_count
+1mer_G_count
+2mer_CA_count
+2mer_CC_count
+3mer_ACC_count
+3mer_CAT_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_GC_count
+2mer_CG_count
+2mer_TG_count
+2mer_TC_count
+3mer_GGC_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CGC_count
+3mer_CCA_count
+3mer_CCC_count
+Average AUC: 0.6547666135837783
+Average accuracy: 0.6651270161290322Current parameter combination is n_estimators: 700 and max_depth: 20
+The top 25 features are:
+distance
+1mer_A_count
+1mer_C_count
+1mer_G_count
+2mer_GC_count
+2mer_CA_count
+2mer_CC_count
+3mer_CAT_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_CG_count
+2mer_TG_count
+2mer_TC_count
+3mer_ACC_count
+3mer_GGC_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CGC_count
+3mer_CCA_count
+3mer_CCC_count
+Average AUC: 0.6878276718882804
+Average accuracy: 0.6583094758064516Current parameter combination is n_estimators: 700 and max_depth: 25
+The top 25 features are:
+distance
+1mer_A_count
+1mer_C_count
+1mer_G_count
+2mer_GC_count
+2mer_CA_count
+2mer_CC_count
+3mer_CAT_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_CG_count
+2mer_TG_count
+2mer_TC_count
+3mer_ACC_count
+3mer_GGC_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CGC_count
+3mer_CCA_count
+3mer_CCC_count
+Average AUC: 0.6697884310524952
+Average accuracy: 0.6619556451612904Current parameter combination is n_estimators: 1000 and max_depth: 5
+The top 25 features are:
+distance
+1mer_A_count
+1mer_C_count
+3mer_ACC_count
+1mer_G_count
+2mer_AA_count
+2mer_CA_count
+2mer_CC_count
+2mer_TG_count
+3mer_CAT_count
+3mer_CCA_count
+3mer_CCT_count
+1mer_T_count
+2mer_AG_count
+2mer_GG_count
+2mer_GC_count
+2mer_CG_count
+3mer_AAA_count
+3mer_GGC_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CCC_count
+3mer_TCC_count
+2mer_AC_count
+2mer_AT_count
+Average AUC: 0.6780611252217946
+Average accuracy: 0.6620302419354838Current parameter combination is n_estimators: 1000 and max_depth: 10
+The top 25 features are:
+1mer_C_count
+distance
+1mer_A_count
+1mer_G_count
+2mer_CA_count
+2mer_CC_count
+2mer_TG_count
+3mer_ACC_count
+3mer_CAT_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_GC_count
+2mer_CG_count
+2mer_TC_count
+3mer_GGC_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CCA_count
+3mer_CCC_count
+3mer_CCT_count
+3mer_TCC_count
+Average AUC: 0.6722232008153377
+Average accuracy: 0.6622147177419354Current parameter combination is n_estimators: 1000 and max_depth: 15
+The top 25 features are:
+1mer_C_count
+distance
+1mer_A_count
+1mer_G_count
+2mer_GC_count
+2mer_CA_count
+2mer_CC_count
+2mer_TG_count
+3mer_ACC_count
+3mer_CAT_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_CG_count
+2mer_TC_count
+3mer_GGC_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CGC_count
+3mer_CCA_count
+3mer_CCC_count
+Average AUC: 0.6678114173055186
+Average accuracy: 0.6612056451612905Current parameter combination is n_estimators: 1000 and max_depth: 20
+The top 25 features are:
+1mer_C_count
+distance
+1mer_A_count
+1mer_G_count
+2mer_GC_count
+2mer_CA_count
+2mer_CC_count
+3mer_CAT_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_CG_count
+2mer_TG_count
+2mer_TC_count
+3mer_ACC_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CGC_count
+3mer_CCA_count
+3mer_CCC_count
+3mer_CCT_count
+Average AUC: 0.6610616800950905
+Average accuracy: 0.6667620967741935Current parameter combination is n_estimators: 1000 and max_depth: 25
+The top 25 features are:
+1mer_C_count
+distance
+1mer_A_count
+1mer_G_count
+2mer_GC_count
+2mer_CA_count
+2mer_CC_count
+3mer_CAT_count
+3mer_CCA_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_CG_count
+2mer_TG_count
+2mer_TC_count
+3mer_ACC_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CGC_count
+3mer_CCC_count
+3mer_CCT_count
+Average AUC: 0.6746332682330827
+Average accuracy: 0.680382056451613Current parameter combination is n_estimators: 2000 and max_depth: 5
+The top 25 features are:
+distance
+1mer_A_count
+1mer_C_count
+3mer_ACC_count
+1mer_G_count
+2mer_AA_count
+2mer_CC_count
+2mer_TG_count
+3mer_CAT_count
+3mer_CCA_count
+3mer_CCT_count
+1mer_T_count
+2mer_AG_count
+2mer_GG_count
+2mer_GC_count
+2mer_CA_count
+2mer_CG_count
+3mer_AAA_count
+3mer_AGC_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CCG_count
+3mer_CCC_count
+3mer_TCC_count
+2mer_AC_count
+Average AUC: 0.6769413670180887
+Average accuracy: 0.6581300403225806Current parameter combination is n_estimators: 2000 and max_depth: 10
+The top 25 features are:
+distance
+1mer_A_count
+1mer_C_count
+1mer_G_count
+2mer_CA_count
+2mer_CC_count
+2mer_TG_count
+3mer_ACC_count
+3mer_CAT_count
+3mer_CCA_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_GC_count
+2mer_CG_count
+2mer_TC_count
+3mer_AGG_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CGC_count
+3mer_CCC_count
+3mer_CCT_count
+Average AUC: 0.6993626499173656
+Average accuracy: 0.6777368951612904Current parameter combination is n_estimators: 2000 and max_depth: 15
+The top 25 features are:
+1mer_C_count
+distance
+1mer_A_count
+1mer_G_count
+2mer_GC_count
+2mer_CA_count
+2mer_CC_count
+3mer_ACC_count
+3mer_CAT_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_CG_count
+2mer_TG_count
+2mer_TC_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CGC_count
+3mer_CCA_count
+3mer_CCC_count
+3mer_CCT_count
+Average AUC: 0.6628788654970761
+Average accuracy: 0.6624233870967742Current parameter combination is n_estimators: 2000 and max_depth: 20
+The top 25 features are:
+1mer_C_count
+distance
+1mer_A_count
+1mer_G_count
+2mer_GC_count
+2mer_CA_count
+2mer_CC_count
+3mer_ACC_count
+3mer_CAT_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_CG_count
+2mer_TG_count
+2mer_TC_count
+3mer_GGC_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CGC_count
+3mer_CCA_count
+3mer_CCC_count
+Average AUC: 0.6545700443935926
+Average accuracy: 0.6399979838709678Current parameter combination is n_estimators: 2000 and max_depth: 25
+The top 25 features are:
+1mer_C_count
+distance
+1mer_A_count
+1mer_G_count
+2mer_GC_count
+2mer_CA_count
+2mer_CC_count
+3mer_CAT_count
+1mer_T_count
+2mer_AA_count
+2mer_AG_count
+2mer_AC_count
+2mer_GG_count
+2mer_CG_count
+2mer_TG_count
+2mer_TC_count
+3mer_ACC_count
+3mer_GGC_count
+3mer_GCA_count
+3mer_GCC_count
+3mer_CAG_count
+3mer_CAC_count
+3mer_CGC_count
+3mer_CCA_count
+3mer_CCC_count
+Average AUC: 0.653971986107671
+Average accuracy: 0.6652499999999999
+
+
+
